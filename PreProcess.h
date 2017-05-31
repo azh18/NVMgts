@@ -25,7 +25,7 @@ class PreProcess
         ofstream fout;
         int maxTid = 0; //当前最大的轨迹编号
         PreProcess();
-        PreProcess(string fileName,string outFileName);
+        bool init(string fileName,string outFileName);
 		bool updateMapBound(float lon,float lat);
 		bool validPoint(float lon, float lat);
         virtual ~PreProcess();

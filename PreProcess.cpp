@@ -15,6 +15,7 @@
 extern int DaysBetween2Date(string date1, string date2);
 //轨迹编号从1开始
 extern Trajectory* tradb;
+extern int tradbNVMID;
 extern map<string, tidLinkTable*> vidTotid;
 extern map<string, tidLinkTable*>::iterator iter;
 extern string baseDate;
@@ -43,7 +44,7 @@ void split(std::string& s, const std::string& delim,std::vector< std::string >* 
 
 
 
-PreProcess::PreProcess(string fileName,string outFileName)
+bool PreProcess::init(string fileName,string outFileName)
 {
 	xmin = 180;
 	xmax = 0;
@@ -51,6 +52,7 @@ PreProcess::PreProcess(string fileName,string outFileName)
 	ymax = 0;
     fin.open(fileName,ios_base::in);
     fout.open(outFileName,ios_base::out);
+
     string buffer;
     buffer.assign(istreambuf_iterator<char>(fin),istreambuf_iterator<char>());
     stringstream bufferstream;
@@ -58,7 +60,8 @@ PreProcess::PreProcess(string fileName,string outFileName)
     string linestr;
 	//MyTimer timer;
 	//tradb = (Trajectory*)malloc(sizeof(Trajectory) * 100000);
-	tradb = new Trajectory[MAX_TRAJ_SIZE];
+	//tradb = new Trajectory[MAX_TRAJ_SIZE];
+
     while(getline(bufferstream,linestr))
     {
         string s = linestr;
@@ -104,7 +107,7 @@ PreProcess::PreProcess(string fileName,string outFileName)
 //		timer.start();
         int ret = tradb[nowTid].addSamplePoints(vllt.lon,vllt.lat,vllt.time);
         //如果成功，添加下一个点
-		
+
         if(ret == 0)
         {
 //			timer.stop();
@@ -143,6 +146,7 @@ PreProcess::PreProcess(string fileName,string outFileName)
 
 
     }
+    return 0;
 }
 
 inline bool PreProcess::updateMapBound(float lon,float lat)
