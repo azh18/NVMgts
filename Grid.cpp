@@ -3,63 +3,54 @@
 
 extern Trajectory* tradb;
 
-Grid::Grid()
-{
-	range = MBB(0, 0, 0, 0);
-	cellnum = 0;
-	cell_size = 0;
-	cell_num_x = 0;
-	cell_num_y = 0;
-	cellPtr = NULL;
-#ifdef _CELL_BASED_STORAGE
-	allPoints = NULL;
-	allPointsPtrGPU = NULL;
-#endif // _CELL_BASED_STORAGE
 
-}
-
-Grid::Grid(const MBB& mbb,float val_cell_size)
+int initGrid(Grid *g,const MBB& mbb,float val_cell_size)
 {
-	range = mbb;
-	cell_size = val_cell_size;
+	g->range = mbb;
+	g->cell_size = val_cell_size;
 	//横向有多少个cell
-	cell_num_x = (int)((mbb.xmax - mbb.xmin) / val_cell_size) + 1;
+	g->cell_num_x = (int)((mbb.xmax - mbb.xmin) / val_cell_size) + 1;
 	//纵向有多少个cell
-	cell_num_y = (int)((mbb.ymax - mbb.ymin) / val_cell_size) + 1;
-	cellnum = cell_num_x*cell_num_y;
-	cellPtr = new Cell[cellnum];
+	g->cell_num_y = (int)((mbb.ymax - mbb.ymin) / val_cell_size) + 1;
+	g->cellnum = g->cell_num_x*g->cell_num_y;
+	//g->cellPtr = new Cell[cellnum];
+	g->cellPtr = (Cell*)malloc(sizeof(Cell)*g->cellnum);
 	//注意cell编号是从(xmin,ymax)开始的，而不是(xmin,ymin)
-	for (int i = 0; i <= cell_num_y - 1; i++) {
-		for (int j = 0; j <= cell_num_x - 1; j++) {
-			int cell_idx = i*cell_num_x + j;
-			cellPtr[cell_idx].initial(i, j, MBB(range.xmin + cell_size*j, range.ymax - cell_size*(i+1), range.xmin + cell_size*(j + 1), range.ymax - cell_size*(i)));
+	for (int i = 0; i <= g->cell_num_y - 1; i++) {
+		for (int j = 0; j <= g->cell_num_x - 1; j++) {
+			int cell_idx = i*g->cell_num_x + j;
+			initialCell(&(g->cellPtr[cell_idx]),i, j, MBB(g->range.xmin + g->cell_size*j, g->range.ymax - g->cell_size*(i+1), g->range.xmin + g->cell_size*(j + 1), g->range.ymax - g->cell_size*(i)));
+			//g->cellPtr[cell_idx].initial(i, j, MBB(g->range.xmin + g->cell_size*j, g->range.ymax - g->cell_size*(i+1), g->range.xmin + g->cell_size*(j + 1), g->range.ymax - g->cell_size*(i)));
 		}
 	}
 }
 
 //把轨迹t打碎成子轨迹，添加到cell里面
-int Grid::addTrajectoryIntoCell(Trajectory &t)
+int addTrajectoryIntoCell(Grid *g, Trajectory &t)
 {
 	if (t.length == 0)
 		return 1;//空轨迹
 	SamplePoint p = t.points[0];
-	int lastCellNo = WhichCellPointIn(p);
+	int lastCellNo = WhichCellPointIn(g,p);
 	int lastCellStartIdx = 0;
 	int nowCellNo;
 	for (int i = 1; i <= t.length - 1; i++) {
 		p = t.points[i];
-		nowCellNo = WhichCellPointIn(p);
+		nowCellNo = WhichCellPointIn(g,p);
 		if (i == t.length - 1)
 		{
 			if (lastCellNo == nowCellNo)
 			{
-				cellPtr[nowCellNo].addSubTra(t.tid, lastCellStartIdx, i, i - lastCellStartIdx + 1);
+			    addSubTra(&(g->cellPtr[nowCellNo]),t.tid, lastCellStartIdx, i, i - lastCellStartIdx + 1);
+				//g->cellPtr[nowCellNo].addSubTra(t.tid, lastCellStartIdx, i, i - lastCellStartIdx + 1);
 				return 0;
 			}
 			else
 			{
-				cellPtr[lastCellNo].addSubTra(t.tid, lastCellStartIdx, i - 1, i - 1 - lastCellStartIdx + 1);
-				cellPtr[nowCellNo].addSubTra(t.tid, i, i, 1);
+			    addSubTra(&(g->cellPtr[lastCellNo]),t.tid, lastCellStartIdx, i - 1, i - 1 - lastCellStartIdx + 1);
+			    addSubTra(&(g->cellPtr[nowCellNo]),t.tid, i, i, 1);
+//				cellPtr[lastCellNo].addSubTra(t.tid, lastCellStartIdx, i - 1, i - 1 - lastCellStartIdx + 1);
+//				cellPtr[nowCellNo].addSubTra(t.tid, i, i, 1);
 				return 0;
 			}
 		}
@@ -69,7 +60,8 @@ int Grid::addTrajectoryIntoCell(Trajectory &t)
 				continue;
 			else
 			{
-				cellPtr[lastCellNo].addSubTra(t.tid, lastCellStartIdx, i - 1, i - 1 - lastCellStartIdx + 1);
+			    addSubTra(&(g->cellPtr[lastCellNo]),t.tid, lastCellStartIdx, i - 1, i - 1 - lastCellStartIdx + 1);
+				//cellPtr[lastCellNo].addSubTra(t.tid, lastCellStartIdx, i - 1, i - 1 - lastCellStartIdx + 1);
 				lastCellNo = nowCellNo;
 				lastCellStartIdx = i;
 			}
@@ -78,64 +70,43 @@ int Grid::addTrajectoryIntoCell(Trajectory &t)
 	return 0;
 }
 
-int Grid::WhichCellPointIn(SamplePoint p)
+int WhichCellPointIn(Grid *g, SamplePoint p)
 {
 	//注意cell编号是从(xmin,ymax)开始的，而不是(xmin,ymin)
-	int row = (int)((range.ymax - p.lat) / cell_size);
-	int col = (int)((p.lon - range.xmin) / cell_size);
-	return row*cell_num_x + col;
+	int row = (int)((g->range.ymax - p.lat) / g->cell_size);
+	int col = (int)((p.lon - g->range.xmin) / g->cell_size);
+	return row*g->cell_num_x + col;
 }
 
-int Grid::addDatasetToGrid(Trajectory * db, int traNum)
+int addDatasetToGrid(Grid *g,Trajectory* db,int traNum)
 {
 	//注意，轨迹编号从1开始
 	int pointCount = 0;
 	for (int i = 1; i <= traNum; i++) {
-		addTrajectoryIntoCell(db[i]);
+		addTrajectoryIntoCell(g, db[i]);
 	}
-	for (int i = 0; i <= cellnum - 1; i++) {
-		cellPtr[i].buildSubTraTable();
-		pointCount += cellPtr[i].totalPointNum;
+	for (int i = 0; i <= g->cellnum - 1; i++) {
+		//cellPtr[i].buildSubTraTable();
+		buildSubTraTable(&(g->cellPtr[i]));
+		pointCount += g->cellPtr[i].totalPointNum;
 	}
-	this->totalPointNum = pointCount;
+	g->totalPointNum = pointCount;
 
-#ifdef _CELL_BASED_STORAGE
-	//转化为cell连续存储
-	//此处连续存储是指同一cell内的采样点存储在一起，有利于rangeQuery，但不利于similarity query
-	this->allPoints = (Point*)malloc(sizeof(Point)*(this->totalPointNum));
-	pointCount = 0;
-	for (int i = 0; i <= cellnum - 1; i++) {
-		cellPtr[i].pointRangeStart = pointCount;
-		for (int j = 0; j <= cellPtr[i].subTraNum - 1; j++) {
-			for (int k = cellPtr[i].subTraTable[j].startpID; k <= cellPtr[i].subTraTable[j].endpID; k++) {
-				allPoints[pointCount].tID = cellPtr[i].subTraTable[j].traID;
-				allPoints[pointCount].x = tradb[allPoints[pointCount].tID].points[k].lon;
-				allPoints[pointCount].y = tradb[allPoints[pointCount].tID].points[k].lat;
-				allPoints[pointCount].time = tradb[allPoints[pointCount].tID].points[k].time;
-				pointCount++;
-			}
-		}
-		cellPtr[i].pointRangeEnd = pointCount - 1;
-		if (cellPtr[i].pointRangeEnd - cellPtr[i].pointRangeStart + 1 != cellPtr[i].totalPointNum)
-			cerr << "Grid.cpp: something wrong in total point statistic" << endl;
-	}
-
-#endif // _CELL_BASED_STORAGE
 
 	return 0;
 }
 
-int Grid::writeCellsToFile(int * cellNo,int cellNum, string file)
+int writeCellsToFile(Grid *g,int* cellNo, int cellNum,string file)
 // under editing....
 {
-	fout.open(file, ios_base::out);
+	g->fout.open(file, ios_base::out);
 	for (int i = 0; i <= cellNum - 1; i++) {
 		int outCellIdx = cellNo[i];
-		cout << outCellIdx << ": " << "[" << cellPtr[outCellIdx].mbb.xmin << "," <<cellPtr[outCellIdx].mbb.xmax << "," << cellPtr[outCellIdx].mbb.ymin << "," << cellPtr[outCellIdx].mbb.ymax << "]" << endl;
-		for (int j = 0; j <= cellPtr[outCellIdx].subTraNum - 1; j++) {
-			int tid = cellPtr[outCellIdx].subTraTable[j].traID;
-			int startpid = cellPtr[outCellIdx].subTraTable[j].startpID;
-			int endpid = cellPtr[outCellIdx].subTraTable[j].endpID;
+		cout << outCellIdx << ": " << "[" << g->cellPtr[outCellIdx].mbb.xmin << "," <<g->cellPtr[outCellIdx].mbb.xmax << "," << g->cellPtr[outCellIdx].mbb.ymin << "," << g->cellPtr[outCellIdx].mbb.ymax << "]" << endl;
+		for (int j = 0; j <= g->cellPtr[outCellIdx].subTraNum - 1; j++) {
+			int tid = g->cellPtr[outCellIdx].subTraTable[j].traID;
+			int startpid = g->cellPtr[outCellIdx].subTraTable[j].startpID;
+			int endpid = g->cellPtr[outCellIdx].subTraTable[j].endpID;
 			for (int k = startpid; k <= endpid; k++) {
 				cout << tradb[tid].points[k].lat << "," << tradb[tid].points[k].lon << ";";
 			}
@@ -146,8 +117,9 @@ int Grid::writeCellsToFile(int * cellNo,int cellNum, string file)
 }
 
 //int Grid::rangeQuery(MBB & bound, int * ResultTraID, SamplePoint ** ResultTable,int* resultSetSize,int* resultTraLength)
-int Grid::rangeQuery(MBB & bound, CPURangeQueryResult * ResultTable, int* resultSetSize)
+int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resultSetSize)
 {
+    sleep(10000);
 	//这部分要移植到gpu上，尽量用底层函数写
 	//为了可比较，在这个函数内仅仅要求把轨迹查出来就行了，result的组织交由QueryResult类来做
 	//判断range是否超出地图
@@ -156,7 +128,7 @@ int Grid::rangeQuery(MBB & bound, CPURangeQueryResult * ResultTable, int* result
 	ResultTable->next = NULL;
 	CPURangeQueryResult* newResult,* nowResult;
 	nowResult = ResultTable;
-	if (this->range.intersect(bound) != 2)
+	if (g->range.intersect(bound) != 2)
 		return 1;
 	else
 	{
@@ -167,12 +139,12 @@ int Grid::rangeQuery(MBB & bound, CPURangeQueryResult * ResultTable, int* result
 		int candidateSize = 0;//candidate个数
 		int resultSize,DirectresultSize = 0;//结果个数
 		int counter = 0;//计数器
-		m = this->cell_num_x;
-		n = this->cell_num_y;
-		g1 = (int)((bound.xmin - range.xmin) / cell_size);
-		g2 = (int)((bound.xmax - range.xmin) / cell_size);
-		g3 = (int)((range.ymax - bound.ymax) / cell_size);
-		g4 = (int)((range.ymax - bound.ymin) / cell_size);
+		m = g->cell_num_x;
+		n = g->cell_num_y;
+		g1 = (int)((bound.xmin - g->range.xmin) / g->cell_size);
+		g2 = (int)((bound.xmax - g->range.xmin) / g->cell_size);
+		g3 = (int)((g->range.ymax - bound.ymax) / g->cell_size);
+		g4 = (int)((g->range.ymax - bound.ymin) / g->cell_size);
 		//for test
 		//g1 = test[0];
 		//g2 = test[1];
@@ -237,7 +209,7 @@ int Grid::rangeQuery(MBB & bound, CPURangeQueryResult * ResultTable, int* result
 		//对所有candidateCell检测，可并行
 		counter = 0;
 		for (int i = 0; i <= candidateSize - 1; i++) {
-			Cell &ce = this->cellPtr[candidatesCellID[i]];
+			Cell &ce = g->cellPtr[candidatesCellID[i]];
 			for (int j = 0; j <= ce.subTraNum - 1; j++) {
 				int traid = ce.subTraTable[j].traID;
 				int startIdx = ce.subTraTable[j].startpID;
@@ -262,7 +234,7 @@ int Grid::rangeQuery(MBB & bound, CPURangeQueryResult * ResultTable, int* result
 
 		//直接作为result的cell加进resulttable
 		for (int i = 0; i <= DirectresultSize - 1; i++) {
-			Cell &ce = this->cellPtr[directResultsCellID[i]];
+			Cell &ce = g->cellPtr[directResultsCellID[i]];
 			for (int j = 0; j <= ce.subTraNum - 1; j++) {
 				int traid = ce.subTraTable[j].traID;
 				int startIdx = ce.subTraTable[j].startpID;
@@ -282,17 +254,12 @@ int Grid::rangeQuery(MBB & bound, CPURangeQueryResult * ResultTable, int* result
 		(*resultSetSize) = counter;
 		//输出结果
 		CPURangeQueryResult* pNow = ResultTable;
-		while (pNow->next != NULL) {
-			printf("%f,%f,%d\n", pNow->next->x, pNow->next->y, pNow->next->traid);
-			pNow = pNow->next;
-		}
+//		while (pNow->next != NULL) {
+//			printf("%f,%f,%d\n", pNow->next->x, pNow->next->y, pNow->next->traid);
+//			pNow = pNow->next;
+//		}
 	}
 	return 0;
 }
 
 
-
-
-Grid::~Grid()
-{
-}

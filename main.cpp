@@ -30,6 +30,17 @@ int tradbNVMID = -1;
 string baseDate = "2014-07-01";
 SysInfo *sysInfo=NULL;
 
+/*
+NVM  Table
+-----------------------------------------------------------------------------
+No                              note
+1                               stateData, represent the state of original data
+2                               tradb, all trajectory
+3                               sysInfo, some current information of system now
+4                               sche, Schedular data
+5                               Queue represent the working queue
+6                               array in the queue
+*/
 
 int main(int argc, char **argv)
 {
@@ -49,6 +60,7 @@ int main(int argc, char **argv)
 	int sz;
     p_init(800*1024*1024);
 
+    //clean the data but failed
     if(argc == 2 && argv[1][0]== 'c'){
 
         if(p_get_bind_node(1,&sz)==NULL){
@@ -71,17 +83,24 @@ int main(int argc, char **argv)
             if(sysInfo!=NULL)
                 p_free(sysInfo);
         }
-        // p_clear();
+        cout << "finishing deleting..." << endl;
+        p_delete(1);
 
         return 0;
     }
 
-
-    //p_init(800*1024*1024-4);
-	if((p_get_bind_node(1,&sz)==NULL)||(argc == 2 && argv[1][0]== 'r')){
+    int *stateData = NULL;
+    /*
+    Load Data...
+    If system is down, recover the pointer from NVM
+    -----------------------------------------------------------------------------------
+    */
+	if((p_get(1,sizeof(int))==NULL)||(argc == 2 && argv[1][0]== 'r')){
         printf("Data not loaded, Loading Data...\n");
-        int *stateData = (int*)p_malloc(sizeof(int));
-        p_bind(1,stateData,sizeof(int));
+
+//        stateData = (int*)p_malloc(sizeof(int));
+//        p_bind(1,stateData,sizeof(int));
+        stateData = (int*)p_new(1,sizeof(int));
         (*stateData) = 1; //build the stateData but not load in data
         printf("Allocating NVM...\n");
         tradb = (Trajectory*)p_malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
@@ -101,7 +120,7 @@ int main(int argc, char **argv)
         printf("Load Data finished\n");
 	}
 	else{
-        int *stateData = (int*)p_get_bind_node(1,&sz);
+        stateData = (int*)p_get(1,sizeof(int));
         char *base = (char*)p_get_base();
         //check if the process is finished
         if((*stateData)==1){
@@ -139,7 +158,7 @@ int main(int argc, char **argv)
             printf("Load Data finished\n");
         }
         else{
-            // load finished, only need bind
+            // stateData>=3, load finished, only need bind and query
             printf("Data loaded, Recovering Data4...\n");
             tradb = (Trajectory*)p_get_bind_node(2,&sz);
             sysInfo = (SysInfo*)p_get_bind_node(3,&sz);
@@ -148,11 +167,18 @@ int main(int argc, char **argv)
 
 	}
 
+    /*
+    Build Grid Index...
+    -----------------------------------------------------------------------------------
+    */
 
 	cout << WriteTrajectoryToFile("dataOut.txt", sysInfo->maxTid) << endl;
 	cout << "read trajectory success!" << endl << "Start building cell index" << endl;
-	Grid* g = new Grid(MBB(sysInfo->xmin, sysInfo->ymin, sysInfo->xmax, sysInfo->ymax), 0.003);
-	g->addDatasetToGrid(tradb, sysInfo->maxTid);
+	//Grid* g = new Grid(MBB(sysInfo->xmin, sysInfo->ymin, sysInfo->xmax, sysInfo->ymax), 0.003);
+	Grid *g = (Grid*)malloc(sizeof(Grid));
+	initGrid(g,MBB(sysInfo->xmin, sysInfo->ymin, sysInfo->xmax, sysInfo->ymax), 0.003);
+	//g->addDatasetToGrid(tradb, sysInfo->maxTid);
+	addDatasetToGrid(g,tradb, sysInfo->maxTid);
 	int count = 0;
 	for (int i = 0; i <= g->cellnum - 1; i++) {
 		if (g->cellPtr[i].subTraNum == 0)
@@ -162,12 +188,37 @@ int main(int argc, char **argv)
 	//int temp[7] = { 553,554,555,556,557,558,559 };
 	//int sizetemp = 7;
 	//g->writeCellsToFile(temp, sizetemp, "111.txt");
-    Schedular schedular;
-    schedular.run(g,tradb);
+    cout << "Building index successful"<<endl;
+    /*
+    Load Schedular... If system is down, restart after data and index are all fine
+    -----------------------------------------------------------------------------------
+    */
+    Schedular *sche = NULL;
+    if(*stateData==3){
+        //stateData==3 means we have not build a schedular, haven't run
+        sche = (Schedular*)p_malloc(sizeof(Schedular));
+        p_bind(4,sche,sizeof(Schedular));
+        *stateData = 4;
+        sche->lastCompletedJob = -1;
+        cout << "begin running schedular..." << endl;
+        runSchedular(sche,g,tradb);
+    }
+    else{
+        //stateData>=4 means schedular has been in NVM
+        sche = (Schedular*)p_get_bind_node(4,&sz);
+        cout << "begin continuing schedular..." << endl;
+        runSchedular(sche,g,tradb);
+    }
+//    Schedular schedular;
+//    runSchedular(&schedular,g,tradb);
+
+    //schedular.run(g,tradb);
+
 	CPURangeQueryResult* resultTable=NULL;
 	int RangeQueryResultSize = 0;
 	MBB queryMbb = MBB(121.4, 31.15, 121.45, 31.20);
-	g->rangeQuery(queryMbb, resultTable, &RangeQueryResultSize);
+	//g->rangeQuery(queryMbb, resultTable, &RangeQueryResultSize);
+	rangeQuery(g,queryMbb, resultTable, &RangeQueryResultSize);
 
 
 //
