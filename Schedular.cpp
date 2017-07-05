@@ -72,6 +72,8 @@ TYPE* front(myQueue *q)
 //}
 
 int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
+    sche->gridIndex = gridIndex;
+    sche->DB = DB;
     if(sche->lastCompletedJob == -1)// have not been inited
     {
         //have not been inited, build queue in nvm
@@ -112,8 +114,37 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
         sche->fp = fopen("Performance.txt","a+");
         Job *pJob = front(sche->jobsBuffQueue);
         if(pJob==NULL){
-            cout << "all jobs have been handled, will exit." << endl;
-            return 0;
+            cout << "all jobs have been handled, if you want to reload, enter R and then press enter." << endl;
+            string press;
+            cin >> press;
+            if(press == "R"){
+                std::ifstream in("queryList.txt",std::ios::in);
+                char queryStr[1024];
+                while(!in.eof())
+                {
+                    in.getline(queryStr,1024);
+                    printf("%s",queryStr);
+                    if(queryStr[0] == '\0')
+                        break;
+                    // generate job
+                    Job newJob;
+                    newJob.jobID = sche->jobIDMax++;
+                    char *tokenPtr = strtok(queryStr, ",");
+                    newJob.queryMBR.xmin = atof(tokenPtr);
+                    newJob.queryMBR.xmax = atof(strtok(NULL, ","));
+                    newJob.queryMBR.ymin = atof(strtok(NULL, ","));
+                    newJob.queryMBR.ymax = atof(strtok(NULL, ","));
+                    newJob.queryTime = time(NULL);
+                    newJob.queryTimeClock = clock();
+                    //sche->jobsBuffQueue->push(newJob);
+                    push(sche->jobsBuffQueue,newJob);
+                }
+                in.close();
+                sche->lastCompletedJob = 0;
+                pJob = front(sche->jobsBuffQueue);
+            }
+            else
+                return 0;
         }
         if((pJob->commited == false) && (pJob->completed == true))
         {
@@ -126,11 +157,13 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
             if(difftime(pJob->completeTime,pJob->queryTime)>5)
             {
                 fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+                printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
             }
             // 如果相差小于5s，说明可能可以用clock精确计时
             else
             {
                 fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+                printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
             }
             fflush(sche->fp);
             pJob->commited = true;
@@ -147,11 +180,13 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
             if(difftime(pJob->completeTime,pJob->queryTime)>5)
             {
                 fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+                printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
             }
             // 如果相差小于5s，说明可能可以用clock精确计时
             else
             {
                 fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+                printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
             }
             fflush(sche->fp);
             pJob->commited = true;
@@ -175,11 +210,13 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
         if(difftime(pJob->completeTime,pJob->queryTime)>5)
         {
             fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+            printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
         }
         // 如果相差小于5s，说明可能可以用clock精确计时
         else
         {
             fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+            printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
         }
         fflush(sche->fp);
         pJob->commited = true;

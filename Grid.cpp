@@ -119,7 +119,7 @@ int writeCellsToFile(Grid *g,int* cellNo, int cellNum,string file)
 //int Grid::rangeQuery(MBB & bound, int * ResultTraID, SamplePoint ** ResultTable,int* resultSetSize,int* resultTraLength)
 int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resultSetSize)
 {
-    sleep(10000);
+    sleep(1);
 	//这部分要移植到gpu上，尽量用底层函数写
 	//为了可比较，在这个函数内仅仅要求把轨迹查出来就行了，result的组织交由QueryResult类来做
 	//判断range是否超出地图
