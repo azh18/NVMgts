@@ -29,6 +29,7 @@ Trajectory* tradb=NULL;
 int tradbNVMID = -1;
 string baseDate = "2014-07-01";
 SysInfo *sysInfo=NULL;
+int *stateData = NULL;
 
 /*
 NVM  Table
@@ -58,38 +59,41 @@ int main(int argc, char **argv)
 	//lon2 = +113.10222;
 	//cout << calculateDistance(lat1, lon1, lat2, lon2) << endl;
 	int sz;
-    p_init(800*1024*1024);
+    p_init(200*1024*1024);
 
     //clean the data but failed
     if(argc == 2 && argv[1][0]== 'c'){
-
-        if(p_get_bind_node(1,&sz)==NULL){
-            printf("Cleaning Data...\n");
+        //*stateData = 3;
+        if(p_get(1,sizeof(int))==NULL){
+            printf("Cleaning Data0...\n");
         }
         else{
             printf("Cleaning Data2...\n");
-            int *stateData = (int*)p_get_bind_node(1,&sz);
+            stateData = (int*)p_get(1,sizeof(int));
             //p_free(stateData);
-            *stateData = 1;
+
             printf("%d",(*stateData));
             tradb = (Trajectory*)p_get_bind_node(2,&sz);
 
-            if(tradb != NULL)
+            if(*stateData > 1)
                 {
                     p_free(tradb);
+                    *stateData = 1;
                     printf("freed tradb");
                 }
+
             sysInfo = (SysInfo*)p_get_bind_node(3,&sz);
-            if(sysInfo!=NULL)
+            if(sysInfo != NULL)
                 p_free(sysInfo);
+            *stateData = 1;
+
         }
         cout << "finishing deleting..." << endl;
-        p_delete(1);
-
+        //(*stateData) = 1;
         return 0;
     }
 
-    int *stateData = NULL;
+
     /*
     Load Data...
     If system is down, recover the pointer from NVM
@@ -101,14 +105,16 @@ int main(int argc, char **argv)
 //        stateData = (int*)p_malloc(sizeof(int));
 //        p_bind(1,stateData,sizeof(int));
         stateData = (int*)p_new(1,sizeof(int));
+        //p_bind(1,stateData,sizeof(int));
         (*stateData) = 1; //build the stateData but not load in data
         printf("Allocating NVM...\n");
         tradb = (Trajectory*)p_malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
-        p_bind(2,tradb,sizeof(Trajectory));
+        printf("malloc:%p\n",tradb);
+	p_bind(2,tradb,sizeof(Trajectory));
         printf("Loading Data...\n");
         (*stateData) = 2; //NVM allocated
         PreProcess pp;
-        pp.init("data_Small_SH.txt", "dataout.txt");
+        pp.init("data_SSmall_SH.txt", "dataout.txt");
         sysInfo = (SysInfo*)p_malloc(sizeof(SysInfo));
         p_bind(3,sysInfo,sizeof(SysInfo));
         sysInfo->xmin = pp.xmin;
@@ -127,10 +133,14 @@ int main(int argc, char **argv)
             // malloc and load data again
             printf("Data not loaded, Loading Data2...\n");
             tradb = (Trajectory*)p_malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
+            printf("malloc: %p\n", tradb);
+            if(tradb == NULL){
+                printf("error allocate traDB\n");
+            }
             p_bind(2,tradb,sizeof(Trajectory));
             (*stateData) = 2; //NVM allocated
             PreProcess pp;
-            pp.init("data_Small_SH.txt", "dataout.txt");
+            pp.init("data_SSmall_SH.txt", "dataout.txt");
             sysInfo = (SysInfo*)p_malloc(sizeof(SysInfo));
             p_bind(3,sysInfo,sizeof(SysInfo));
             sysInfo->xmin = pp.xmin;
@@ -146,7 +156,7 @@ int main(int argc, char **argv)
             printf("Data not loaded, Loading Data3...\n");
             tradb = (Trajectory*)p_get_bind_node(2,&sz);
             PreProcess pp;
-            pp.init("data_Small_SH.txt", "dataout.txt");
+            pp.init("data_SSmall_SH.txt", "dataout.txt");
             sysInfo = (SysInfo*)p_malloc(sizeof(SysInfo));
             p_bind(3,sysInfo,sizeof(SysInfo));
             sysInfo->xmin = pp.xmin;
@@ -211,7 +221,6 @@ int main(int argc, char **argv)
     }
 //    Schedular schedular;
 //    runSchedular(&schedular,g,tradb);
-
     //schedular.run(g,tradb);
 
 	CPURangeQueryResult* resultTable=NULL;

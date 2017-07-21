@@ -298,6 +298,19 @@ int writeResult(Schedular *sche){
 }
 
 //
+//-----------------------------
+// how to permit atom?
+//-----------------------------
+//
+bool destroySchedular(Schedular *sche){
+    myQueue* tempQueue = sche->jobsBuffQueue;
+    p_free(tempQueue->m_pData);
+    p_free(sche->jobsBuffQueue);
+    p_free(sche);
+    (*stateData) = 3;
+}
+
+//
 //int Schedular::writeResult()
 //{
 //    Job *pJob = this->jobsBuffQueue->front();

@@ -1,0 +1,463 @@
+# depslib dependency file v1.0
+1495200520 source:/home/zbw0046/NVMgts/Cell.cpp
+	"Cell.h"
+
+1495192312 
+
+1495200520 /home/zbw0046/NVMgts/Cell.h
+	"ConstDefine.h"
+	"MBB.h"
+	<string>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1495626899 /home/zbw0046/NVMgts/ConstDefine.h
+	<stdio.h>
+	<string>
+	"p_mmap.h"
+
+1495192312 /home/zbw0046/NVMgts/p_mmap.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<unistd.h>
+	<sys/types.h>
+	<sys/ipc.h>
+	<sys/shm.h>
+	<sys/syscall.h>
+	<sys/mman.h>
+	<linux/unistd.h>
+
+1495192312 std.h>
+
+1495201600 /home/zbw0046/NVMgts/MBB.h
+
+1495200520 source:/home/zbw0046/NVMgts/DateTime.cpp
+	<string>
+	<time.h>
+	<math.h>
+	<iostream>
+	"ConstDefine.h"
+
+1495200520 ne.h"
+
+1495201746 source:/home/zbw0046/NVMgts/Grid.cpp
+	"Grid.h"
+
+1495201722 /home/zbw0046/NVMgts/Grid.h
+	"Cell.h"
+	"ConstDefine.h"
+	"MBB.h"
+	"QueryResult.h"
+	"Trajectory.h"
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1495200520 /home/zbw0046/NVMgts/QueryResult.h
+
+1495200520 /home/zbw0046/NVMgts/Trajectory.h
+	"ConstDefine.h"
+	"SamplePoint.h"
+
+1495200520 nt.h"
+
+1495200520 /home/zbw0046/NVMgts/SamplePoint.h
+	"ConstDefine.h"
+
+1495200520 source:/home/zbw0046/NVMgts/MBB.cpp
+	"MBB.h"
+
+1495626265 source:/home/zbw0046/NVMgts/PreProcess.cpp
+	"PreProcess.h"
+	"Trajectory.h"
+	"SamplePoint.h"
+	"ConstDefine.h"
+	<map>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+	<cstdlib>
+
+1495626229 /home/zbw0046/NVMgts/PreProcess.h
+	<fstream>
+	"ConstDefine.h"
+
+1495200520 source:/home/zbw0046/NVMgts/QueryResult.cpp
+	"QueryResult.h"
+	"ConstDefine.h"
+
+1495200520 source:/home/zbw0046/NVMgts/SamplePoint.cpp
+	"SamplePoint.h"
+
+1495200520 source:/home/zbw0046/NVMgts/Trajectory.cpp
+	"Trajectory.h"
+
+1495200520 y.h"
+
+1495626469 source:/home/zbw0046/NVMgts/main.cpp
+	<iostream>
+	<fstream>
+	<map>
+	"CalcInAxis.h"
+	"PreProcess.h"
+	"Trajectory.h"
+	<vector>
+	"Grid.h"
+
+1495200520 /home/zbw0046/NVMgts/CalcInAxis.h
+	"math.h"
+	"ConstDefine.h"
+
+1495192312 source:/home/zbw0046/NVMgts/p_mmap.cpp
+	"p_mmap.h"
+
+1495200520 source:d:\code\nvmgts\nvmgts\cell.cpp
+	"Cell.h"
+
+1495200520 d:\code\nvmgts\nvmgts\cell.h
+	"ConstDefine.h"
+	"MBB.h"
+	<string>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1496215744 d:\code\nvmgts\nvmgts\constdefine.h
+	<stdio.h>
+	<string>
+	"p_mmap.h"
+
+1495192312 d:\code\nvmgts\nvmgts\p_mmap.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<unistd.h>
+	<sys/types.h>
+	<sys/ipc.h>
+	<sys/shm.h>
+	<sys/syscall.h>
+	<sys/mman.h>
+	<linux/unistd.h>
+
+1495201600 d:\code\nvmgts\nvmgts\mbb.h
+
+1495200520 source:d:\code\nvmgts\nvmgts\datetime.cpp
+	<string>
+	<time.h>
+	<math.h>
+	<iostream>
+	"ConstDefine.h"
+
+1495201746 source:d:\code\nvmgts\nvmgts\grid.cpp
+	"Grid.h"
+
+1495201722 d:\code\nvmgts\nvmgts\grid.h
+	"Cell.h"
+	"ConstDefine.h"
+	"MBB.h"
+	"QueryResult.h"
+	"Trajectory.h"
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1495200520 d:\code\nvmgts\nvmgts\queryresult.h
+
+1495200520 d:\code\nvmgts\nvmgts\trajectory.h
+	"ConstDefine.h"
+	"SamplePoint.h"
+
+1495200520 d:\code\nvmgts\nvmgts\samplepoint.h
+	"ConstDefine.h"
+
+1495200520 source:d:\code\nvmgts\nvmgts\mbb.cpp
+	"MBB.h"
+
+1495192312 source:d:\code\nvmgts\nvmgts\p_mmap.cpp
+	"p_mmap.h"
+
+1495626265 source:d:\code\nvmgts\nvmgts\preprocess.cpp
+	"PreProcess.h"
+	"Trajectory.h"
+	"SamplePoint.h"
+	"ConstDefine.h"
+	<map>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+	<cstdlib>
+
+1495626229 d:\code\nvmgts\nvmgts\preprocess.h
+	<fstream>
+	"ConstDefine.h"
+
+1495200520 source:d:\code\nvmgts\nvmgts\queryresult.cpp
+	"QueryResult.h"
+	"ConstDefine.h"
+
+1495200520 source:d:\code\nvmgts\nvmgts\samplepoint.cpp
+	"SamplePoint.h"
+
+1495200520 source:d:\code\nvmgts\nvmgts\trajectory.cpp
+	"Trajectory.h"
+
+1495200520 source:/home/zbw0046/NVMgts_2/Cell.cpp
+	"Cell.h"
+
+1495200520 /home/zbw0046/NVMgts_2/Cell.h
+	"ConstDefine.h"
+	"MBB.h"
+	<string>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1496220233 /home/zbw0046/NVMgts_2/ConstDefine.h
+	<stdio.h>
+	<string>
+	"p_mmap.h"
+
+1495192312 /home/zbw0046/NVMgts_2/p_mmap.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<unistd.h>
+	<sys/types.h>
+	<sys/ipc.h>
+	<sys/shm.h>
+	<sys/syscall.h>
+	<sys/mman.h>
+	<linux/unistd.h>
+
+1495201600 /home/zbw0046/NVMgts_2/MBB.h
+
+1495200520 source:/home/zbw0046/NVMgts_2/DateTime.cpp
+	<string>
+	<time.h>
+	<math.h>
+	<iostream>
+	"ConstDefine.h"
+
+1495201746 source:/home/zbw0046/NVMgts_2/Grid.cpp
+	"Grid.h"
+
+1495201722 /home/zbw0046/NVMgts_2/Grid.h
+	"Cell.h"
+	"ConstDefine.h"
+	"MBB.h"
+	"QueryResult.h"
+	"Trajectory.h"
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1495200520 /home/zbw0046/NVMgts_2/QueryResult.h
+
+1495200520 /home/zbw0046/NVMgts_2/Trajectory.h
+	"ConstDefine.h"
+	"SamplePoint.h"
+
+1495200520 /home/zbw0046/NVMgts_2/SamplePoint.h
+	"ConstDefine.h"
+
+1495200520 source:/home/zbw0046/NVMgts_2/MBB.cpp
+	"MBB.h"
+
+1495192312 source:/home/zbw0046/NVMgts_2/p_mmap.cpp
+	"p_mmap.h"
+
+1495626265 source:/home/zbw0046/NVMgts_2/PreProcess.cpp
+	"PreProcess.h"
+	"Trajectory.h"
+	"SamplePoint.h"
+	"ConstDefine.h"
+	<map>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+	<cstdlib>
+
+1495626229 /home/zbw0046/NVMgts_2/PreProcess.h
+	<fstream>
+	"ConstDefine.h"
+
+1495200520 source:/home/zbw0046/NVMgts_2/QueryResult.cpp
+	"QueryResult.h"
+	"ConstDefine.h"
+
+1495200520 source:/home/zbw0046/NVMgts_2/SamplePoint.cpp
+	"SamplePoint.h"
+
+1495200520 source:/home/zbw0046/NVMgts_2/Trajectory.cpp
+	"Trajectory.h"
+
+1496236200 source:/home/zbw0046/NVMgts_2/main.cpp
+	<iostream>
+	<fstream>
+	<map>
+	"CalcInAxis.h"
+	"PreProcess.h"
+	"Trajectory.h"
+	<vector>
+	"Grid.h"
+	"Schedular.h"
+
+1495200520 /home/zbw0046/NVMgts_2/CalcInAxis.h
+	"math.h"
+	"ConstDefine.h"
+
+1496233349 source:/home/zbw0046/NVMgts_2/Schedular.cpp
+	"Schedular.h"
+	<string>
+	<fstream>
+
+1496227866 /home/zbw0046/NVMgts_2/Schedular.h
+	"ConstDefine.h"
+	"time.h"
+	"MBB.h"
+	"Grid.h"
+	"Trajectory.h"
+
+1495200520 source:/home/zbw0046/NVMgts/DateTime.cpp
+	<string>
+	<time.h>
+	<math.h>
+	<iostream>
+	"ConstDefine.h"
+
+1496220233 /home/zbw0046/NVMgts/ConstDefine.h
+	<stdio.h>
+	<string>
+	"p_mmap.h"
+
+1495192312 /home/zbw0046/NVMgts/p_mmap.h
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<unistd.h>
+	<sys/types.h>
+	<sys/ipc.h>
+	<sys/shm.h>
+	<sys/syscall.h>
+	<sys/mman.h>
+	<linux/unistd.h>
+
+1495200520 source:/home/zbw0046/NVMgts/MBB.cpp
+	"MBB.h"
+
+1496284742 /home/zbw0046/NVMgts/MBB.h
+
+1495192312 source:/home/zbw0046/NVMgts/p_mmap.cpp
+	"p_mmap.h"
+
+1495626265 source:/home/zbw0046/NVMgts/PreProcess.cpp
+	"PreProcess.h"
+	"Trajectory.h"
+	"SamplePoint.h"
+	"ConstDefine.h"
+	<map>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+	<cstdlib>
+
+1495626229 /home/zbw0046/NVMgts/PreProcess.h
+	<fstream>
+	"ConstDefine.h"
+
+1495200520 /home/zbw0046/NVMgts/Trajectory.h
+	"ConstDefine.h"
+	"SamplePoint.h"
+
+1495200520 /home/zbw0046/NVMgts/SamplePoint.h
+	"ConstDefine.h"
+
+1495200520 source:/home/zbw0046/NVMgts/QueryResult.cpp
+	"QueryResult.h"
+	"ConstDefine.h"
+
+1495200520 /home/zbw0046/NVMgts/QueryResult.h
+
+1495200520 source:/home/zbw0046/NVMgts/SamplePoint.cpp
+	"SamplePoint.h"
+
+1500534297 source:/home/zbw0046/NVMgts/Schedular.cpp
+	"Schedular.h"
+	<string>
+	<fstream>
+
+1500534066 /home/zbw0046/NVMgts/Schedular.h
+	"ConstDefine.h"
+	"time.h"
+	"MBB.h"
+	"Grid.h"
+	"Trajectory.h"
+
+1496285946 /home/zbw0046/NVMgts/Grid.h
+	"Cell.h"
+	"ConstDefine.h"
+	"MBB.h"
+	"QueryResult.h"
+	"Trajectory.h"
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1496285841 /home/zbw0046/NVMgts/Cell.h
+	"ConstDefine.h"
+	"MBB.h"
+	<string>
+	<iostream>
+	<fstream>
+	<string>
+	<sstream>
+	<vector>
+
+1495200520 source:/home/zbw0046/NVMgts/Trajectory.cpp
+	"Trajectory.h"
+
+1496285939 source:/home/zbw0046/NVMgts/Cell.cpp
+	"Cell.h"
+
+1499256832 source:/home/zbw0046/NVMgts/Grid.cpp
+	"Grid.h"
+
+1496840873 source:/home/zbw0046/NVMgts/main.cpp
+	<iostream>
+	<fstream>
+	<map>
+	"CalcInAxis.h"
+	"PreProcess.h"
+	"Trajectory.h"
+	<vector>
+	"Grid.h"
+	"Schedular.h"
+
+1495200520 /home/zbw0046/NVMgts/CalcInAxis.h
+	"math.h"
+	"ConstDefine.h"
+

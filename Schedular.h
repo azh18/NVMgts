@@ -6,6 +6,8 @@
 #include "Grid.h"
 #include "Trajectory.h"
 
+extern int *stateData;
+
 typedef struct Job{
     MBB queryMBR;
     int jobID = -1;
@@ -117,6 +119,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB);
 int executeQueryInSchedular(Schedular *sche);
 int loadJobs(Schedular *sche);
 int writeResult(Schedular *sche);
+bool destroySchedular(Schedular *sche);
 
 //class Schedular
 //{
