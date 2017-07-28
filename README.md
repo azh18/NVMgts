@@ -1,12 +1,15 @@
-# NVMgts
-clean
------
+# NVMgts #
+## clean ##
 make clean
 
-compile
------
+## compile ##
 make
 
-run
------
+## run ##
 ./test
+
+## restart ##
+./test r
+
+## clean all data on NVM ##
+./test c
