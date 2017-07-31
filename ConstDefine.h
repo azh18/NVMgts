@@ -1,5 +1,5 @@
 #pragma once
-#define MAX_TRAJ_SIZE 10000
+#define MAX_TRAJ_SIZE 1000
 #define MAXLENGTH 512
 //MAXGAP是最大轨迹内时间间隔，如果超过这个间隔应该被视为两条轨迹
 #define MAXGAP 3600
@@ -11,7 +11,11 @@
 #include <stdio.h>
 #include <string>
 
+extern "C"
+{
 #include "p_mmap.h"
+}
+
 //test:以cell为基础存储
 #define _CELL_BASED_STORAGE
 //test:Similarity query based on naive grid，以定大小的grid来索引
