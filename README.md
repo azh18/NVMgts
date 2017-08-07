@@ -1,4 +1,6 @@
 # NVMgts #
+
+Fast-recoverable hybrid-memory trajectory storage system
 ## clean ##
 make clean
 
