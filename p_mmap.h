@@ -44,9 +44,11 @@ int p_init(int size);
 */
 int p_clear();
 
-void *p_malloc(int size);
+void *p_malloc(int pid, int size);
 
-int p_free(void *addr);
+char *p_get_malloc(int pid);
+
+int p_free(int pid);
 
 void *p_new(int pId, int size);
 
