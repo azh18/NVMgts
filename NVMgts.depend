@@ -474,7 +474,7 @@
 	<sstream>
 	<vector>
 
-1502249194 /home/zbw/NVMgts/NVMgts/ConstDefine.h
+1502272479 /home/zbw/NVMgts/NVMgts/ConstDefine.h
 	<stdio.h>
 	<string>
 	"p_mmap.h"
@@ -500,10 +500,10 @@
 	<iostream>
 	"ConstDefine.h"
 
-1502262566 source:/home/zbw/NVMgts/NVMgts/Grid.cpp
+1502275004 source:/home/zbw/NVMgts/NVMgts/Grid.cpp
 	"Grid.h"
 
-1502249194 /home/zbw/NVMgts/NVMgts/Grid.h
+1502275181 /home/zbw/NVMgts/NVMgts/Grid.h
 	"Cell.h"
 	"ConstDefine.h"
 	"MBB.h"
@@ -514,6 +514,7 @@
 	<string>
 	<sstream>
 	<vector>
+	"BufferManager.h"
 
 1502249194 /home/zbw/NVMgts/NVMgts/QueryResult.h
 
@@ -524,7 +525,7 @@
 1502262683 /home/zbw/NVMgts/NVMgts/SamplePoint.h
 	"ConstDefine.h"
 
-1502262645 source:/home/zbw/NVMgts/NVMgts/main.cpp
+1502275210 source:/home/zbw/NVMgts/NVMgts/main.cpp
 	<iostream>
 	<fstream>
 	<map>
@@ -544,7 +545,7 @@
 	<fstream>
 	"ConstDefine.h"
 
-1502249194 /home/zbw/NVMgts/NVMgts/Schedular.h
+1502272417 /home/zbw/NVMgts/NVMgts/Schedular.h
 	"ConstDefine.h"
 	"time.h"
 	"MBB.h"
@@ -574,7 +575,7 @@
 1502262228 source:/home/zbw/NVMgts/NVMgts/SamplePoint.cpp
 	"SamplePoint.h"
 
-1502262409 source:/home/zbw/NVMgts/NVMgts/Schedular.cpp
+1502272417 source:/home/zbw/NVMgts/NVMgts/Schedular.cpp
 	"Schedular.h"
 	<string>
 	<fstream>
@@ -582,6 +583,17 @@
 1502261684 source:/home/zbw/NVMgts/NVMgts/Trajectory.cpp
 	"Trajectory.h"
 
-1502262450 source:/home/zbw/NVMgts/NVMgts/p_mmap.c
+1502264711 source:/home/zbw/NVMgts/NVMgts/p_mmap.c
 	"p_mmap.h"
+
+1502275170 source:/home/zbw/NVMgts/NVMgts/BufferManager.cpp
+	"BufferManager.h"
+
+1502275081 /home/zbw/NVMgts/NVMgts/BufferManager.h
+	<vector>
+	<map>
+	"ConstDefine.h"
+	"SamplePoint.h"
+	"Trajectory.h"
+	"Cell.h"
 

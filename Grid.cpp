@@ -3,6 +3,8 @@
 
 extern Trajectory* tradb;
 
+Grid::Grid(){
+}
 
 int initGrid(Grid *g,const MBB& mbb,float val_cell_size)
 {

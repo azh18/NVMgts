@@ -9,18 +9,22 @@
 #include<string>
 #include<sstream>
 #include<vector>
+#include "BufferManager.h"
 
 extern Trajectory* tradb;
 
-typedef struct Grid{
-    MBB range;
+class Grid{
+public:
+	MBB range;
 	float cell_size; //length of a cell
 	int cell_num_x,cell_num_y; //横竖各有多少个cell
 	int cellnum; //upper(area(grid)/area(cell))，保证能放下所有cell
 	Cell* cellPtr; //存储cell的入口
 	ofstream fout;//文件输出接口
 	int totalPointNum; //grid内点个数
-}Grid;
+	BufferManager buffer; //buffer，冷热区域
+	Grid();
+};
 
 int initGrid(Grid *g,const MBB& mbb, float val_cell_size);
 int addTrajectoryIntoCell(Grid *g, Trajectory &t);

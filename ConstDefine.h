@@ -13,6 +13,7 @@
 extern "C"{
 #include "p_mmap.h"
 }
+
 //test:以cell为基础存储
 #define _CELL_BASED_STORAGE
 //test:Similarity query based on naive grid，以定大小的grid来索引

@@ -198,7 +198,7 @@ int main(int argc, char **argv)
 	//cout << WriteTrajectoryToFile("dataOut.txt", sysInfo->maxTid) << endl;
 	cout << "read trajectory success!" << endl << "Start building cell index" << endl;
 	//Grid* g = new Grid(MBB(sysInfo->xmin, sysInfo->ymin, sysInfo->xmax, sysInfo->ymax), 0.003);
-	Grid *g = (Grid*)malloc(sizeof(Grid));
+	Grid *g = new Grid();
 	initGrid(g,MBB(sysInfo->xmin, sysInfo->ymin, sysInfo->xmax, sysInfo->ymax), 0.003);
 	//g->addDatasetToGrid(tradb, sysInfo->maxTid);
 	addDatasetToGrid(g,tradb, sysInfo->maxTid);
