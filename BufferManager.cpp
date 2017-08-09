@@ -24,6 +24,7 @@ void BufferManager::remove(CacheNode *node)
 	{
 		head = node->next;
 	}
+
 	if(node->next !=NULL)
 	{
 		node->next->prev = node->prev;
@@ -32,7 +33,6 @@ void BufferManager::remove(CacheNode *node)
 	{
 		tail = node->prev;
 	}
-	free(now);
 }
 
 void BufferManager::insertToHead(CacheNode *node){
@@ -53,17 +53,21 @@ int BufferManager::getKey(int key, Cell *ce, Trajectory* db){
 		CacheNode* node = this->bufferStateIterTool->second;
 		this->remove(node);
 		this->insertToHead(node);
+		return 1; //在DRAM内
         }
-        else
+        else if (this->cellFetchTime[key] >= this->thresReadTime)
         {
                 if(this->bufferState.size()>=this->maxCellInDRAM)
                 {
 			//删除链表末尾的元素
 			this->bufferStateIterTool = this->bufferState.find(this->tail->key);
-			this->remove(tail);
                         this->bufferState.erase(this->bufferStateIterTool);
 			this->bufferIterTool = this->bufferData.find(this->tail->key);
 			this->bufferData.erase(this->bufferIterTool);
+			this->cellFetchTime[this->tail->key] = 0;
+			CacheNode *oldTail = this->tail;
+			this->remove(this->tail);
+			free(oldTail);
                 }
                 //增加新元素
                 CacheNode* node = (CacheNode*)malloc(sizeof(CacheNode));
@@ -87,7 +91,13 @@ int BufferManager::getKey(int key, Cell *ce, Trajectory* db){
                                 temp->subTraData[temp->subTraData.size()-1].points.push_back(db[traID].points[idx]);
 			}
 		}
+		return 1; //在DRAM内
         }
-        return 0;
+        else
+        {
+		this->cellFetchTime[key]++;
+		return 0; //意为不在DRAM内
+        }
+
 }
 

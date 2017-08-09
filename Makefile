@@ -28,6 +28,7 @@ OBJECTS = \
 	QueryResult.o\
 	SamplePoint.o\
 	Trajectory.o\
+	BufferManager.o\
 	main.o
 
 

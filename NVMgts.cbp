@@ -42,6 +42,8 @@
 		<Linker>
 			<Add option="-m64" />
 		</Linker>
+		<Unit filename="BufferManager.cpp" />
+		<Unit filename="BufferManager.h" />
 		<Unit filename="CalcInAxis.h" />
 		<Unit filename="Cell.cpp" />
 		<Unit filename="Cell.h" />

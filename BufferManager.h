@@ -37,12 +37,15 @@ class BufferManager  //利用LRU保存最近的频繁读取的cell
 {
 public:
 	int maxCellInDRAM;
+	int thresReadTime;
 	std::map<int,cellBlockBuffer> bufferData; //DRAM中保存的轨迹的buffer
 	std::map<int,cellBlockBuffer>::iterator bufferIterTool;
 
 	CacheNode* head,*tail;
 	std::map<int,CacheNode*> bufferState;
 	std::map<int,CacheNode*>::iterator bufferStateIterTool;
+
+	std::vector<int> cellFetchTime;
 
 
 	BufferManager();

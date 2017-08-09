@@ -3,7 +3,8 @@
 
 extern Trajectory* tradb;
 
-Grid::Grid(){
+Grid::Grid()
+{
 }
 
 int initGrid(Grid *g,const MBB& mbb,float val_cell_size)
@@ -27,6 +28,9 @@ int initGrid(Grid *g,const MBB& mbb,float val_cell_size)
 			//g->cellPtr[cell_idx].initial(i, j, MBB(g->range.xmin + g->cell_size*j, g->range.ymax - g->cell_size*(i+1), g->range.xmin + g->cell_size*(j + 1), g->range.ymax - g->cell_size*(i)));
 		}
 	}
+	g->buffer.cellFetchTime.resize(g->cellnum,0);
+	g->buffer.maxCellInDRAM = 500;
+	g->buffer.thresReadTime = 10;
 	return 0;
 }
 
@@ -231,19 +235,115 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 		counter = 0;
 		for (int i = 0; i <= candidateSize - 1; i++)
 		{
+			int cellID = candidatesCellID[i];
 			Cell &ce = g->cellPtr[candidatesCellID[i]];
-			for (int j = 0; j <= ce.subTraNum - 1; j++)
-			{
-				int traid = ce.subTraTable[j].traID;
-				int startIdx = ce.subTraTable[j].startpID;
-				int endIdx = ce.subTraTable[j].endpID;
-				for (int k = startIdx; k <= endIdx; k++)
+                        if(g->buffer.getKey(cellID,&ce,tradb))
+                        {
+				printf("fetch DRAM\n");
+				//点在DRAM内
+				for(int j=0;j<=ce.subTraNum-1;j++)
 				{
-					if (bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat))//该点在bound内
+                                        for(int k=0;k<=g->buffer.bufferData[cellID].subTraData[j].length-1;k++)
+                                        {
+						SamplePoint p;
+						p.lat = g->buffer.bufferData[cellID].subTraData[j].points[k].lat;
+						p.lon = g->buffer.bufferData[cellID].subTraData[j].points[k].lon;
+						p.tid = g->buffer.bufferData[cellID].subTraData[j].points[k].tid;
+						p.time = g->buffer.bufferData[cellID].subTraData[j].points[k].time;
+
+						if (bound.pInBox(p.lon, p.lat))//该点在bound内
+						{
+							newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
+							if (newResult == NULL)
+								return 2; //分配内存失败
+							newResult->traid = p.tid;
+							newResult->x = p.lon;
+							newResult->y = p.lat;
+							newResult->next = NULL;
+							nowResult->next = newResult;
+							nowResult = newResult;
+							counter++;
+						}
+                                        }
+				}
+
+                        }
+                        else
+                        {
+				for (int j = 0; j <= ce.subTraNum - 1; j++)
+				{
+					int traid = ce.subTraTable[j].traID;
+					int startIdx = ce.subTraTable[j].startpID;
+					int endIdx = ce.subTraTable[j].endpID;
+					for (int k = startIdx; k <= endIdx; k++)
+					{
+						if (bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat))//该点在bound内
+						{
+							newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
+							if (newResult == NULL)
+								return 2; //分配内存失败
+							newResult->traid = tradb[traid].points[k].tid;
+							newResult->x = tradb[traid].points[k].lon;
+							newResult->y = tradb[traid].points[k].lat;
+							newResult->next = NULL;
+							nowResult->next = newResult;
+							nowResult = newResult;
+							counter++;
+						}
+					}
+				}
+                        }
+
+
+		}
+
+		//直接作为result的cell加进resulttable
+		for (int i = 0; i <= DirectresultSize - 1; i++)
+		{
+			Cell &ce = g->cellPtr[directResultsCellID[i]];
+			int cellID = directResultsCellID[i];
+			if(g->buffer.getKey(cellID,&ce,tradb))
+			{
+				//点在DRAM内
+				printf("fetch DRAM\n");
+				for(int j=0;j<=ce.subTraNum-1;j++)
+				{
+					printf("cell %d in DRAM: ",g->buffer.bufferData[cellID].cellID);
+                                        for(int k=0;k<=g->buffer.bufferData[cellID].subTraData[j].length-1;k++)
+                                        {
+						SamplePoint p;
+						p.lat = g->buffer.bufferData[cellID].subTraData[j].points[k].lat;
+						p.lon = g->buffer.bufferData[cellID].subTraData[j].points[k].lon;
+						p.tid = g->buffer.bufferData[cellID].subTraData[j].points[k].tid;
+						p.time = g->buffer.bufferData[cellID].subTraData[j].points[k].time;
+
+						if (bound.pInBox(p.lon, p.lat))//该点在bound内
+						{
+							newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
+							if (newResult == NULL)
+								return 2; //分配内存失败
+							newResult->traid = p.tid;
+							newResult->x = p.lon;
+							newResult->y = p.lat;
+							newResult->next = NULL;
+							nowResult->next = newResult;
+							nowResult = newResult;
+							counter++;
+						}
+                                        }
+				}
+			}
+			else
+			{
+				//点在NVM内
+				for (int j = 0; j <= ce.subTraNum - 1; j++)
+				{
+					int traid = ce.subTraTable[j].traID;
+					int startIdx = ce.subTraTable[j].startpID;
+					int endIdx = ce.subTraTable[j].endpID;
+					for (int k = startIdx; k <= endIdx; k++)
 					{
 						newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
-						if (newResult == NULL)
-							return 2; //分配内存失败
 						newResult->traid = tradb[traid].points[k].tid;
 						newResult->x = tradb[traid].points[k].lon;
 						newResult->y = tradb[traid].points[k].lat;
@@ -254,30 +354,10 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 					}
 				}
 			}
+
 		}
 
-		//直接作为result的cell加进resulttable
-		for (int i = 0; i <= DirectresultSize - 1; i++)
-		{
-			Cell &ce = g->cellPtr[directResultsCellID[i]];
-			for (int j = 0; j <= ce.subTraNum - 1; j++)
-			{
-				int traid = ce.subTraTable[j].traID;
-				int startIdx = ce.subTraTable[j].startpID;
-				int endIdx = ce.subTraTable[j].endpID;
-				for (int k = startIdx; k <= endIdx; k++)
-				{
-					newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
-					newResult->traid = tradb[traid].points[k].tid;
-					newResult->x = tradb[traid].points[k].lon;
-					newResult->y = tradb[traid].points[k].lat;
-					newResult->next = NULL;
-					nowResult->next = newResult;
-					nowResult = newResult;
-					counter++;
-				}
-			}
-		}
+
 		(*resultSetSize) = counter;
 		//输出结果
 		//CPURangeQueryResult* pNow = ResultTable;
