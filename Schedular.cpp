@@ -7,19 +7,19 @@
 int initMyQueue(myQueue *q, int nCount)
 {
 	q->m_nCount = nCount;
-	//q->m_pData = new TYPE[nCount];//×¢ÒâÕâÀï²»ÊÇÐ¡À¨ºÅ£¬Ð¡À©ºÅÊÇµ÷ÓÃ¹¹Ôìº¯Êý
-	q->m_pData = (TYPE*)p_malloc(sizeof(TYPE)*nCount);
-	p_bind(6,q->m_pData,sizeof(TYPE));
+	//q->m_pData = new TYPE[nCount];//æ³¨æ„è¿™é‡Œä¸æ˜¯å°æ‹¬å·ï¼Œå°æ‰©å·æ˜¯è°ƒç”¨æž„é€ å‡½æ•°
+	q->m_pData = (TYPE*)p_malloc(6, sizeof(TYPE)*nCount);
 	q->m_nHead = q->m_nTail = 0;
+	return 0;
 }
 
 bool isEmpty(myQueue *q)
 {
 	return q->m_nHead == q->m_nTail;
 }
-bool isFull(myQueue *q)//ÕâÀïÊÇÄÑµã
+bool isFull(myQueue *q)//è¿™é‡Œæ˜¯éš¾ç‚¹
 {
-	return (q->m_nTail+1)%q->m_nCount == q->m_nHead; //Î²°Í ¼Ó1 ¶Ô×Ü³¤¶ÈÈ¡ ÓàÊý Èç¹ûÓë Í·²¿ ÏàµÈ£¬Ôò¶ÓÁÐÂú£¬¶ÓÁÐÒªÔ¤Áô³öÒ»¸ö¿Õ¼äÀ´ÅÐ¶ÏÊÇ·ñÂú¶ÓÁÐ
+	return (q->m_nTail+1)%q->m_nCount == q->m_nHead; //å°¾å·´ åŠ 1 å¯¹æ€»é•¿åº¦å– ä½™æ•° å¦‚æžœä¸Ž å¤´éƒ¨ ç›¸ç­‰ï¼Œåˆ™é˜Ÿåˆ—æ»¡ï¼Œé˜Ÿåˆ—è¦é¢„ç•™å‡ºä¸€ä¸ªç©ºé—´æ¥åˆ¤æ–­æ˜¯å¦æ»¡é˜Ÿåˆ—
 }
 
 void push(myQueue *q,const TYPE& t)
@@ -29,7 +29,7 @@ void push(myQueue *q,const TYPE& t)
 		return;
 	}
 	q->m_pData[q->m_nTail++] = t;
-	q->m_nTail %= q->m_nCount;  //Èç¹û Î²°Í µ½ÁË×îºóÈÃËûÖ±½ÓÅÜµ½ ¶ÔÍ·
+	q->m_nTail %= q->m_nCount;  //å¦‚æžœ å°¾å·´ åˆ°äº†æœ€åŽè®©ä»–ç›´æŽ¥è·‘åˆ° å¯¹å¤´
 
 
 }
@@ -71,178 +71,180 @@ TYPE* front(myQueue *q)
 //    //dtor
 //}
 
-int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
-    sche->gridIndex = gridIndex;
-    sche->DB = DB;
-    if(sche->lastCompletedJob == -1)// have not been inited
-    {
-        //have not been inited, build queue in nvm
-        initSchedular(sche, gridIndex, DB);
-        std::ifstream in("queryList.txt",std::ios::in);
-        char queryStr[1024];
-        while(!in.eof())
-        {
-            in.getline(queryStr,1024);
-            printf("%s",queryStr);
-            if(queryStr[0] == '\0')
-                break;
-            // generate job
-            Job newJob;
-            newJob.jobID = sche->jobIDMax++;
-            char *tokenPtr = strtok(queryStr, ",");
-            newJob.queryMBR.xmin = atof(tokenPtr);
-            newJob.queryMBR.xmax = atof(strtok(NULL, ","));
-            newJob.queryMBR.ymin = atof(strtok(NULL, ","));
-            newJob.queryMBR.ymax = atof(strtok(NULL, ","));
-            newJob.queryTime = time(NULL);
-            newJob.queryTimeClock = clock();
-            //sche->jobsBuffQueue->push(newJob);
-            push(sche->jobsBuffQueue,newJob);
-        }
-        in.close();
-        sche->lastCompletedJob = 0;
-    }
-    else
-        //´¦Àí¶ÓÍ·£¬È»ºóÔÙÕýÊ½½ÓÏÂÀ´µÄ´¦Àí
-    {
-        //schedular has been initialed, recover from nvm
-        //remember to add the base addr
-        int sz;
-        char *baseAddr = (char*)p_get_base();
-        sche->jobsBuffQueue = (myQueue*)p_get_bind_node(5,&sz);
-        sche->jobsBuffQueue->m_pData = (TYPE*)p_get_bind_node(6,&sz);
-        sche->fp = fopen("Performance.txt","a+");
-        Job *pJob = front(sche->jobsBuffQueue);
-        if(pJob==NULL){
-            cout << "all jobs have been handled, if you want to reload, enter R and then press enter." << endl;
-            string press;
-            cin >> press;
-            if(press == "R"){
-                std::ifstream in("queryList.txt",std::ios::in);
-                char queryStr[1024];
-                while(!in.eof())
-                {
-                    in.getline(queryStr,1024);
-                    printf("%s",queryStr);
-                    if(queryStr[0] == '\0')
-                        break;
-                    // generate job
-                    Job newJob;
-                    newJob.jobID = sche->jobIDMax++;
-                    char *tokenPtr = strtok(queryStr, ",");
-                    newJob.queryMBR.xmin = atof(tokenPtr);
-                    newJob.queryMBR.xmax = atof(strtok(NULL, ","));
-                    newJob.queryMBR.ymin = atof(strtok(NULL, ","));
-                    newJob.queryMBR.ymax = atof(strtok(NULL, ","));
-                    newJob.queryTime = time(NULL);
-                    newJob.queryTimeClock = clock();
-                    //sche->jobsBuffQueue->push(newJob);
-                    push(sche->jobsBuffQueue,newJob);
-                }
-                in.close();
-                sche->lastCompletedJob = 0;
-                pJob = front(sche->jobsBuffQueue);
-            }
-            else
-                return 0;
-        }
-        if((pJob->commited == false) && (pJob->completed == true))
-        {
-            //sche->writeResult();
-            writeResult(sche);
-            // Ö»ÓÐÈÎÎñÌá½»²ÅËãÍê³É
-            pJob->completeTime = time(NULL);
-            pJob->completeTimeClock = clock();
-            // Èç¹ûÏà²î´óÓÚ5s£¬ËµÃ÷ÖØÆô¹ý£¬ÓÃÆÕÍ¨¼ÆÊ±·¨¾Í¿ÉÒÔ
-            if(difftime(pJob->completeTime,pJob->queryTime)>5)
-            {
-                fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-                printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-            }
-            // Èç¹ûÏà²îÐ¡ÓÚ5s£¬ËµÃ÷¿ÉÄÜ¿ÉÒÔÓÃclock¾«È·¼ÆÊ±
-            else
-            {
-                fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-                printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-            }
-            fflush(sche->fp);
-            pJob->commited = true;
-            pop(sche->jobsBuffQueue);
-        }
-        else if((pJob->commited == false) && (pJob->completed == false))
-        {
-            executeQueryInSchedular(sche);
-            writeResult(sche);
-            pJob->completed = true;
-            pJob->completeTime = time(NULL);
-            pJob->completeTimeClock = clock();
-            // Èç¹ûÏà²î´óÓÚ5s£¬ËµÃ÷ÖØÆô¹ý£¬ÓÃÆÕÍ¨¼ÆÊ±·¨¾Í¿ÉÒÔ
-            if(difftime(pJob->completeTime,pJob->queryTime)>5)
-            {
-                fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-                printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-            }
-            // Èç¹ûÏà²îÐ¡ÓÚ5s£¬ËµÃ÷¿ÉÄÜ¿ÉÒÔÓÃclock¾«È·¼ÆÊ±
-            else
-            {
-                fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-                printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-            }
-            fflush(sche->fp);
-            pJob->commited = true;
-            pop(sche->jobsBuffQueue);
-        }
-        else
-        {
-            pop(sche->jobsBuffQueue);
-        }
-    }
-    while(!isEmpty(sche->jobsBuffQueue))
-    {
-        //execute the query
-        Job *pJob = front(sche->jobsBuffQueue);
-        executeQueryInSchedular(sche);
-        pJob->completed = true;
-        writeResult(sche);
-        pJob->completeTime = time(NULL);
-        pJob->completeTimeClock = clock();
-        // Èç¹ûÏà²î´óÓÚ5s£¬ËµÃ÷ÖØÆô¹ý£¬ÓÃÆÕÍ¨¼ÆÊ±·¨¾Í¿ÉÒÔ
-        if(difftime(pJob->completeTime,pJob->queryTime)>5)
-        {
-            fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-            printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-        }
-        // Èç¹ûÏà²îÐ¡ÓÚ5s£¬ËµÃ÷¿ÉÄÜ¿ÉÒÔÓÃclock¾«È·¼ÆÊ±
-        else
-        {
-            fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-            printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-        }
-        fflush(sche->fp);
-        pJob->commited = true;
-        pop(sche->jobsBuffQueue);
-    }
-    fclose(sche->fp);
+int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
+{
+	sche->gridIndex = gridIndex;
+	sche->DB = DB;
+	if(sche->lastCompletedJob == -1)// have not been inited
+	{
+		//have not been inited, build queue in nvm
+		initSchedular(sche, gridIndex, DB);
+		std::ifstream in("queryList.txt",std::ios::in);
+		char queryStr[1024];
+		while(!in.eof())
+		{
+			in.getline(queryStr,1024);
+			printf("%s",queryStr);
+			if(queryStr[0] == '\0')
+				break;
+			// generate job
+			Job newJob;
+			newJob.jobID = sche->jobIDMax++;
+			char *tokenPtr = strtok(queryStr, ",");
+			newJob.queryMBR.xmin = atof(tokenPtr);
+			newJob.queryMBR.xmax = atof(strtok(NULL, ","));
+			newJob.queryMBR.ymin = atof(strtok(NULL, ","));
+			newJob.queryMBR.ymax = atof(strtok(NULL, ","));
+			newJob.queryTime = time(NULL);
+			newJob.queryTimeClock = clock();
+			//sche->jobsBuffQueue->push(newJob);
+			push(sche->jobsBuffQueue,newJob);
+		}
+		in.close();
+		sche->lastCompletedJob = 0;
+	}
+	else
+		//å¤„ç†é˜Ÿå¤´ï¼Œç„¶åŽå†æ­£å¼æŽ¥ä¸‹æ¥çš„å¤„ç†
+	{
+		//schedular has been initialed, recover from nvm
+		//remember to add the base addr
+		char *baseAddr = (char*)p_get_base();
+		sche->jobsBuffQueue = (myQueue*)p_get_malloc(5);
+		sche->jobsBuffQueue->m_pData = (TYPE*)p_get_malloc(6);
+		sche->fp = fopen("Performance.txt","a+");
+		Job *pJob = front(sche->jobsBuffQueue);
+		if(pJob==NULL)
+		{
+			cout << "all jobs have been handled, if you want to reload, enter R and then press enter." << endl;
+			string press;
+			cin >> press;
+			if(press == "R")
+			{
+				std::ifstream in("queryList.txt",std::ios::in);
+				char queryStr[1024];
+				while(!in.eof())
+				{
+					in.getline(queryStr,1024);
+					printf("%s",queryStr);
+					if(queryStr[0] == '\0')
+						break;
+					// generate job
+					Job newJob;
+					newJob.jobID = sche->jobIDMax++;
+					char *tokenPtr = strtok(queryStr, ",");
+					newJob.queryMBR.xmin = atof(tokenPtr);
+					newJob.queryMBR.xmax = atof(strtok(NULL, ","));
+					newJob.queryMBR.ymin = atof(strtok(NULL, ","));
+					newJob.queryMBR.ymax = atof(strtok(NULL, ","));
+					newJob.queryTime = time(NULL);
+					newJob.queryTimeClock = clock();
+					//sche->jobsBuffQueue->push(newJob);
+					push(sche->jobsBuffQueue,newJob);
+				}
+				in.close();
+				sche->lastCompletedJob = 0;
+				pJob = front(sche->jobsBuffQueue);
+			}
+			else
+				return 0;
+		}
+		if((pJob->commited == false) && (pJob->completed == true))
+		{
+			//sche->writeResult();
+			writeResult(sche);
+			// åªæœ‰ä»»åŠ¡æäº¤æ‰ç®—å®Œæˆ
+			pJob->completeTime = time(NULL);
+			pJob->completeTimeClock = clock();
+			// å¦‚æžœç›¸å·®å¤§äºŽ5sï¼Œè¯´æ˜Žé‡å¯è¿‡ï¼Œç”¨æ™®é€šè®¡æ—¶æ³•å°±å¯ä»¥
+			if(difftime(pJob->completeTime,pJob->queryTime)>5)
+			{
+				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+				printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+			}
+			// å¦‚æžœç›¸å·®å°äºŽ5sï¼Œè¯´æ˜Žå¯èƒ½å¯ä»¥ç”¨clockç²¾ç¡®è®¡æ—¶
+			else
+			{
+				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+				printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+			}
+			fflush(sche->fp);
+			pJob->commited = true;
+			pop(sche->jobsBuffQueue);
+		}
+		else if((pJob->commited == false) && (pJob->completed == false))
+		{
+			executeQueryInSchedular(sche);
+			writeResult(sche);
+			pJob->completed = true;
+			pJob->completeTime = time(NULL);
+			pJob->completeTimeClock = clock();
+			// å¦‚æžœç›¸å·®å¤§äºŽ5sï¼Œè¯´æ˜Žé‡å¯è¿‡ï¼Œç”¨æ™®é€šè®¡æ—¶æ³•å°±å¯ä»¥
+			if(difftime(pJob->completeTime,pJob->queryTime)>5)
+			{
+				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+				printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+			}
+			// å¦‚æžœç›¸å·®å°äºŽ5sï¼Œè¯´æ˜Žå¯èƒ½å¯ä»¥ç”¨clockç²¾ç¡®è®¡æ—¶
+			else
+			{
+				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+				printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+			}
+			fflush(sche->fp);
+			pJob->commited = true;
+			pop(sche->jobsBuffQueue);
+		}
+		else
+		{
+			pop(sche->jobsBuffQueue);
+		}
+	}
+	while(!isEmpty(sche->jobsBuffQueue))
+	{
+		//execute the query
+		Job *pJob = front(sche->jobsBuffQueue);
+		executeQueryInSchedular(sche);
+		pJob->completed = true;
+		writeResult(sche);
+		pJob->completeTime = time(NULL);
+		pJob->completeTimeClock = clock();
+		// å¦‚æžœç›¸å·®å¤§äºŽ5sï¼Œè¯´æ˜Žé‡å¯è¿‡ï¼Œç”¨æ™®é€šè®¡æ—¶æ³•å°±å¯ä»¥
+		if(difftime(pJob->completeTime,pJob->queryTime)>5)
+		{
+			fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+			printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
+		}
+		// å¦‚æžœç›¸å·®å°äºŽ5sï¼Œè¯´æ˜Žå¯èƒ½å¯ä»¥ç”¨clockç²¾ç¡®è®¡æ—¶
+		else
+		{
+			fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+			printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
+		}
+		fflush(sche->fp);
+		pJob->commited = true;
+		pop(sche->jobsBuffQueue);
+	}
+	fclose(sche->fp);
 }
 
 //int Schedular::run(Grid *gridIndex, Trajectory *DB)
 //{
-//    // Èç¹ûÏµÍ³³õÊ¼Æô¶¯£¬³õÊ¼»¯¶ÓÁÐ£¬È»ºóÔÙÕýÊ½½ÓÏÂÀ´µÄ´¦Àí
+//    // å¦‚æžœç³»ç»Ÿåˆå§‹å¯åŠ¨ï¼Œåˆå§‹åŒ–é˜Ÿåˆ—ï¼Œç„¶åŽå†æ­£å¼æŽ¥ä¸‹æ¥çš„å¤„ç†
 //
 //}
 
 
-int initSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
-    //sche->jobsBuffQueue = (myQueue*)malloc(sizeof(myQueue));
-    sche->jobsBuffQueue = (myQueue*)p_malloc(sizeof(myQueue));
-    p_bind(5,sche->jobsBuffQueue,sizeof(myQueue));
-    initMyQueue(sche->jobsBuffQueue,MAXJOBSNUM);
-    sche->gridIndex = gridIndex;
-    sche->DB = DB;
-    sche->fp = fopen("Performance.txt","a+");
-    sche->jobIDMax = 0;
-    sche->lastCompletedJob = -1;
-
+int initSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
+{
+	//sche->jobsBuffQueue = (myQueue*)malloc(sizeof(myQueue));
+	sche->jobsBuffQueue = (myQueue*)p_malloc(5, sizeof(myQueue));
+	initMyQueue(sche->jobsBuffQueue,MAXJOBSNUM);
+	sche->gridIndex = gridIndex;
+	sche->DB = DB;
+	sche->fp = fopen("Performance.txt","a+");
+	sche->jobIDMax = 0;
+	sche->lastCompletedJob = -1;
+	return 0;
 }
 
 //int Schedular::init(Grid *gridIndex, Trajectory *DB)
@@ -255,12 +257,14 @@ int initSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB){
 //    this->lastCompletedJob = -1;
 //}
 
-//Ö´ÐÐ²éÑ¯²¢½«½á¹ûÐ´Èëjob¶ÓÁÐÄÚ
+//æ‰§è¡ŒæŸ¥è¯¢å¹¶å°†ç»“æžœå†™å…¥jobé˜Ÿåˆ—å†…
 
-int executeQueryInSchedular(Schedular *sche){
-    Job *pJob = front(sche->jobsBuffQueue);
-    //this->gridIndex->rangeQuery(pJob->queryMBR,pJob->resultData,&pJob->resultNum); //ÕâÀï½ö½öÊÇÐ´ÈëÁËDRAMÀï£¬ÓÐmalloc²Ù×÷£¡
-    rangeQuery(sche->gridIndex,pJob->queryMBR,pJob->resultData,&pJob->resultNum);
+int executeQueryInSchedular(Schedular *sche)
+{
+	Job *pJob = front(sche->jobsBuffQueue);
+	//this->gridIndex->rangeQuery(pJob->queryMBR,pJob->resultData,&pJob->resultNum); //è¿™é‡Œä»…ä»…æ˜¯å†™å…¥äº†DRAMé‡Œï¼Œæœ‰mallocæ“ä½œï¼
+	rangeQuery(sche->gridIndex,pJob->queryMBR,pJob->resultData,&pJob->resultNum);
+	return 0;
 }
 
 
@@ -268,7 +272,7 @@ int executeQueryInSchedular(Schedular *sche){
 //int Schedular::executeQuery()
 //{
 //    Job *pJob = this->jobsBuffQueue->front();
-//    //this->gridIndex->rangeQuery(pJob->queryMBR,pJob->resultData,&pJob->resultNum); //ÕâÀï½ö½öÊÇÐ´ÈëÁËDRAMÀï£¬ÓÐmalloc²Ù×÷£¡
+//    //this->gridIndex->rangeQuery(pJob->queryMBR,pJob->resultData,&pJob->resultNum); //è¿™é‡Œä»…ä»…æ˜¯å†™å…¥äº†DRAMé‡Œï¼Œæœ‰mallocæ“ä½œï¼
 //    rangeQuery(this->gridIndex,pJob->queryMBR,pJob->resultData,&pJob->resultNum);
 //}
 
@@ -277,24 +281,26 @@ int executeQueryInSchedular(Schedular *sche){
 //
 //}
 
-int writeResult(Schedular *sche){
-    Job *pJob = front(sche->jobsBuffQueue);
-    int resultNum = pJob->resultNum;
-    CPURangeQueryResult* pStart = pJob->resultData;
-    CPURangeQueryResult *pLast=NULL;
-    FILE *fp = fopen("RangeQueryResult.txt","a+");
-    fprintf(fp,"Query ID:%d, Result Num:%d\n",pJob->jobID,pJob->resultNum);
-    for(int i=0;i<=resultNum-1;i++)
-    {
-        if(pStart!=NULL)
-        {
-            fprintf(fp,"%f,%f,%d\n",pStart->x,pStart->y,pStart->traid);
-            pLast = pStart;
-            pStart = pStart->next;
-            free(pLast);
-        }
-    }
-    fclose(fp);
+int writeResult(Schedular *sche)
+{
+	Job *pJob = front(sche->jobsBuffQueue);
+	int resultNum = pJob->resultNum;
+	CPURangeQueryResult* pStart = pJob->resultData;
+	CPURangeQueryResult *pLast=NULL;
+	FILE *fp = fopen("RangeQueryResult.txt","a+");
+	fprintf(fp,"Query ID:%d, Result Num:%d\n",pJob->jobID,pJob->resultNum);
+	for(int i=0; i<=resultNum-1; i++)
+	{
+		if(pStart!=NULL)
+		{
+			fprintf(fp,"%f,%f,%d\n",pStart->x,pStart->y,pStart->traid);
+			pLast = pStart;
+			pStart = pStart->next;
+			free(pLast);
+		}
+	}
+	fclose(fp);
+	return 0;
 }
 
 //
@@ -302,12 +308,13 @@ int writeResult(Schedular *sche){
 // how to permit atom?
 //-----------------------------
 //
-bool destroySchedular(Schedular *sche){
-    myQueue* tempQueue = sche->jobsBuffQueue;
-    p_free(tempQueue->m_pData);
-    p_free(sche->jobsBuffQueue);
-    p_free(sche);
-    (*stateData) = 3;
+bool destroySchedular(Schedular *sche)
+{
+	myQueue* tempQueue = sche->jobsBuffQueue;
+	p_free(6);
+	p_free(5);
+	p_free(4);
+	(*stateData) = 3;
 }
 
 //

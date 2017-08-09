@@ -12,6 +12,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-std=c++11" />
 					<Add option="-g" />
 					<Add directory="include" />
 					<Add directory="../NVMgts" />
@@ -61,7 +62,9 @@
 		<Unit filename="Trajectory.cpp" />
 		<Unit filename="Trajectory.h" />
 		<Unit filename="main.cpp" />
-		<Unit filename="p_mmap.cpp" />
+		<Unit filename="p_mmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="p_mmap.h" />
 		<Extensions>
 			<code_completion />

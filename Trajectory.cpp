@@ -3,52 +3,44 @@
 
 extern float calculateDistance(float LatA,float LonA,float LatB,float LonB);
 
-Trajectory::Trajectory()
-{
 
+Trajectory generateTrajectory(int tid,std::string vid)
+{
+    Trajectory t;
+    t.tid = tid;
+    memcpy(t.vid,vid.c_str(),sizeof(char)*vid.length());
+    t.length = 0;
+    return t;
     //ctor
 }
 
-Trajectory::Trajectory(int tid,std::string vid)
+//å¾€è½¨è¿¹é‡Œæ·»åŠ é‡‡æ ·ç‚¹
+//0:æˆåŠŸ 1:è¶…è¿‡æœ€å¤§æ•°ç›® 2:æ—¶é—´è·¨åº¦å¤ªå¤§ï¼Œåº”è®¡å…¥ä¸‹æ¡è½¨è¿¹ 3:æ—¶é—´è·¨åº¦ä¸å¤§ï¼Œç©ºé—´è·¨åº¦å¤ªå¤§ï¼Œè®¡ç®—å‡ºæ¥çš„é€Ÿåº¦å¤§äºŽ180km/h~~50m/sï¼Œèˆå¼ƒè¯¥ç‚¹
+int addSamplePoints(Trajectory *traj, float lon,float lat,int time)
 {
-    this->tid = tid;
-    this->vid = vid;
-    this->length = 0;
-    //ctor
-}
-
-//Íù¹ì¼£ÀïÌí¼Ó²ÉÑùµã
-//0:³É¹¦ 1:³¬¹ý×î´óÊýÄ¿ 2:Ê±¼ä¿ç¶ÈÌ«´ó£¬Ó¦¼ÆÈëÏÂÌõ¹ì¼£ 3:Ê±¼ä¿ç¶È²»´ó£¬¿Õ¼ä¿ç¶ÈÌ«´ó£¬¼ÆËã³öÀ´µÄËÙ¶È´óÓÚ180km/h~~50m/s£¬ÉáÆú¸Ãµã
-int Trajectory::addSamplePoints(float lon,float lat,int time)
-{
-    //lengthÖ¸ÏòµÄ¾ÍÊÇµ±Ç°µÄidx£¬length³¬¹ý×î´óÖµ£¬ÔòÊ§°Ü£¬·µ»Ø1
-    if(this->length>=MAXLENGTH)
+    //lengthæŒ‡å‘çš„å°±æ˜¯å½“å‰çš„idxï¼Œlengthè¶…è¿‡æœ€å¤§å€¼ï¼Œåˆ™å¤±è´¥ï¼Œè¿”å›ž1
+    if(traj->length>=MAXLENGTH)
     {
         return 1;
     }
-    if(this->length>0)
+    if(traj->length>0)
     {
-        if(time - this->points[this->length-1].time > MAXGAP)
+        if(time - traj->points[traj->length-1].time > MAXGAP)
         {
             return 2;
         }
-        if((calculateDistance(lat,lon,this->points[this->length-1].lat,this->points[this->length-1].lon))/(time - this->points[this->length-1].time)>=50)
+        if((calculateDistance(lat,lon,traj->points[traj->length-1].lat,traj->points[traj->length-1].lon))/(time - traj->points[traj->length-1].time)>=50)
         {
             return 3;
         }
     }
-    //¾­¹ý¼ì²é¿ÉÒÔ¼ÓÈëÕâµãµ½¹ì¼£ÖÐ
-    this->points[this->length].lat = lat;
-    this->points[this->length].lon = lon;
-    this->points[this->length].tid = this->tid;
-    this->points[this->length].time = time;
-    this->length++;
+    //ç»è¿‡æ£€æŸ¥å¯ä»¥åŠ å…¥è¿™ç‚¹åˆ°è½¨è¿¹ä¸­
+    traj->points[traj->length].lat = lat;
+    traj->points[traj->length].lon = lon;
+    traj->points[traj->length].tid = traj->tid;
+    traj->points[traj->length].time = time;
+    traj->length++;
     return 0;
 }
 
 
-
-Trajectory::~Trajectory()
-{
-    //dtor
-}

@@ -1,43 +1,59 @@
-######################################
+# Makefile example for compiling cuda and linking cuda to cpp:
+
+SOURCELOC = 
+
+UTILITYLOC =
+
+NEWMOD =
+
+PROGRAM = test
+
+INCDIR= .
 #
-######################################
-#source file
-#源文件，自动找所有.c和.cpp文件，并将目标定义为同名.o文件
-SOURCE  := $(wildcard *.c) $(wildcard *.cpp)
-OBJS    := $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
-  
-#target you can change test to what you want
-#目标文件名，输入任意你想要的执行文件名
-TARGET  := test
-  
-#compile and lib parameter
-#编译参数
-CC      := g++
-LIBS    :=
-LDFLAGS :=
-DEFINES :=
-INCLUDE := -Iheaders
-CFLAGS  := -g -Wall -O3 $(DEFINES) $(INCLUDE)
-CXXFLAGS:= $(CFLAGS) -DHAVE_CONFIG_H -std=c++11
+# Define the C compile flags
+CCFLAGS = -g -m64 -I ./header -std=c++11
+CC = g++
 
-#i think you should do anything here
-#下面的基本上不需要做任何改动了
-.PHONY : everything objs clean veryclean rebuild
 
-everything : $(TARGET)
 
-all : $(TARGET)
+# Define all object files
 
-objs : $(OBJS)
+OBJECTS = \
+	Cell.o\
+	DateTime.o\
+	Schedular.o\
+	Grid.o\
+	MBB.o\
+	PreProcess.o\
+	QueryResult.o\
+	SamplePoint.o\
+	Trajectory.o\
+	main.o
 
-rebuild: veryclean everything
-              
-clean :
-	rm -fr *.so
-	rm -fr *.o
-    
-veryclean : clean
-	rm -fr $(TARGET)
 
-$(TARGET) : $(OBJS)
-	$(CC) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+
+# Define Task Function Program
+
+
+all: test
+
+
+# Define what Modtools is
+
+
+test: $(OBJECTS)
+	gcc -m64 -c -g p_mmap.c -o p_mmap.o
+	$(CC) $(CCFLAGS) -o test  p_mmap.o $(OBJECTS)
+
+# Modtools_Object codes
+
+
+.cpp.o:
+
+	$(CC) $(CCFLAGS) -c $<
+
+
+clean:
+	rm -rf *.o
+#  end
+

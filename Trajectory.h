@@ -4,24 +4,18 @@
 #include "SamplePoint.h"
 
 
-// ¹ì¼£Àà£¬¼ÇÂ¼¸Ã¹ì¼£µÄ²ÉÑùµãµÈĞÅÏ¢£¬×î³¤1024
-class Trajectory
-{
-    public:
-        Trajectory();
-        Trajectory(int tid,std::string vid);
-        int addSamplePoints(float lon,float lat,int time);
-        virtual ~Trajectory();
+// è½¨è¿¹ç±»ï¼Œè®°å½•è¯¥è½¨è¿¹çš„é‡‡æ ·ç‚¹ç­‰ä¿¡æ¯ï¼Œæœ€é•¿1024
+typedef struct Trajectory{
         int tid;
-        SamplePoint points[MAXLENGTH]; //ÏÂ±ê´Ó0¿ªÊ¼
+        SamplePoint points[MAXLENGTH];
         int length = 0;
-        std::string vid;
+        char vid[40];
         int errCounter = 0;
-        SamplePoint errPointBuff[10]; //±¸ÓÃ
+        SamplePoint errPointBuff[10]; //å¤‡ç”¨
+}Trajectory;
 
-    protected:
+Trajectory generateTrajectory(int tid,std::string vid);
+int addSamplePoints(Trajectory *traj,float lon,float lat,int time);
 
-    private:
-};
 
 #endif // TRAJECTORY_H

@@ -2,21 +2,12 @@
 #define SAMPLEPOINT_H
 #include "ConstDefine.h"
 
-class SamplePoint
-{
-    public:
-        SamplePoint();
-        SamplePoint(float lon1,float lat1,int time1,int tid1);
-        virtual ~SamplePoint();
+typedef struct SamplePoint{
         float lon;
         float lat;
         int time;
         int tid;
+}SamplePoint;
 
-    protected:
-
-    private:
-
-};
-
+SamplePoint generateSamplePoint(float lon1,float lat1,int time1,int tid1);
 #endif // SAMPLEPOINT_H

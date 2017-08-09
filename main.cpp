@@ -1,4 +1,4 @@
-// Data_Structure_Test.cpp : ∂®“Âøÿ÷∆Ã®”¶”√≥Ã–Úµƒ»Îø⁄µ„°£
+// Data_Structure_Test.cpp : ÂÆö‰πâÊéßÂà∂Âè∞Â∫îÁî®Á®ãÂ∫èÁöÑÂÖ•Âè£ÁÇπ„ÄÇ
 //
 
 #include <iostream>
@@ -11,18 +11,23 @@
 #include "Grid.h"
 #include "Schedular.h"
 
+extern "C"{
+#include "p_mmap.h"
+}
+
 using namespace std;
 
 map<string, tidLinkTable*> vidTotid;
 map<string, tidLinkTable*>::iterator iter;
 
-typedef struct SysInfo{
-    double ymin;
-    double ymax;
-    double xmin;
-    double xmax;
-    int maxTid;
-}SysInfo;
+typedef struct SysInfo
+{
+	double ymin;
+	double ymax;
+	double xmin;
+	double xmax;
+	int maxTid;
+} SysInfo;
 
 //global
 Trajectory* tradb=NULL;
@@ -45,7 +50,7 @@ No                              note
 
 int main(int argc, char **argv)
 {
-    //printf("hellp");
+	//printf("hellp");
 
 
 	int WriteTrajectoryToFile(string outFileName, int numTra);
@@ -59,130 +64,138 @@ int main(int argc, char **argv)
 	//lon2 = +113.10222;
 	//cout << calculateDistance(lat1, lon1, lat2, lon2) << endl;
 	int sz;
-    p_init(200*1024*1024);
+	p_clear();
+	p_init(20*1024*1024);
 
-    //clean the data but failed
-    if(argc == 2 && argv[1][0]== 'c'){
-        //*stateData = 3;
-        if(p_get(1,sizeof(int))==NULL){
-            printf("Cleaning Data0...\n");
-        }
-        else{
-            printf("Cleaning Data2...\n");
-            stateData = (int*)p_get(1,sizeof(int));
-            //p_free(stateData);
+	//clean the data but failed
+	if(argc == 2 && argv[1][0]== 'c')
+	{
+		//*stateData = 3;
+		if(p_get_malloc(1)==NULL)
+		{
+			printf("Cleaning Data0...\n");
+		}
+		else
+		{
+			printf("Cleaning Data2...\n");
+			stateData = (int*)p_get_malloc(1);
+			//p_free(stateData);
 
-            printf("%d",(*stateData));
-            tradb = (Trajectory*)p_get_bind_node(2,&sz);
+			printf("%d",(*stateData));
+			tradb = (Trajectory*)p_get_malloc(2);
 
-            if(*stateData > 1)
-                {
-                    p_free(tradb);
-                    *stateData = 1;
-                    printf("freed tradb");
-                }
+			if(*stateData > 1)
+			{
+				p_free(2);
+				*stateData = 1;
+				printf("freed tradb");
+			}
 
-            sysInfo = (SysInfo*)p_get_bind_node(3,&sz);
-            if(sysInfo != NULL)
-                p_free(sysInfo);
-            *stateData = 1;
+			sysInfo = (SysInfo*)p_get_malloc(3);
+			if(sysInfo != NULL)
+				p_free(3);
+			*stateData = 1;
 
-        }
-        cout << "finishing deleting..." << endl;
-        //(*stateData) = 1;
-        return 0;
-    }
+		}
+		p_clear();
+		cout << "finishing deleting..." << endl;
+		//(*stateData) = 1;
+		return 0;
+	}
 
 
-    /*
-    Load Data...
-    If system is down, recover the pointer from NVM
-    -----------------------------------------------------------------------------------
-    */
-	if((p_get(1,sizeof(int))==NULL)||(argc == 2 && argv[1][0]== 'r')){
-        printf("Data not loaded, Loading Data...\n");
+	/*
+	Load Data...
+	If system is down, recover the pointer from NVM
+	-----------------------------------------------------------------------------------
+	*/
+	if((p_get_malloc(1)==NULL)||(argc == 2 && argv[1][0]== 'r'))
+	{
+		printf("Data not loaded, Loading Data...\n");
 
 //        stateData = (int*)p_malloc(sizeof(int));
 //        p_bind(1,stateData,sizeof(int));
-        stateData = (int*)p_new(1,sizeof(int));
-        //p_bind(1,stateData,sizeof(int));
-        (*stateData) = 1; //build the stateData but not load in data
-        printf("Allocating NVM...\n");
-        tradb = (Trajectory*)p_malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
-        printf("malloc:%p\n",tradb);
-	p_bind(2,tradb,sizeof(Trajectory));
-        printf("Loading Data...\n");
-        (*stateData) = 2; //NVM allocated
-        PreProcess pp;
-        pp.init("data_SSmall_SH.txt", "dataout.txt");
-        sysInfo = (SysInfo*)p_malloc(sizeof(SysInfo));
-        p_bind(3,sysInfo,sizeof(SysInfo));
-        sysInfo->xmin = pp.xmin;
-        sysInfo->xmax = pp.xmax;
-        sysInfo->ymin = pp.ymin;
-        sysInfo->ymax = pp.ymax;
-        sysInfo->maxTid = pp.maxTid;
-        (*stateData) = 3; //build data finished
-        printf("Load Data finished\n");
+		stateData = (int*)p_malloc(1,sizeof(int));
+		//p_bind(1,stateData,sizeof(int));
+		(*stateData) = 1; //build the stateData but not load in data
+		printf("Allocating NVM...\n");
+		tradb = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
+		memset(tradb,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
+		printf("malloc:%p\n",tradb);
+		printf("Loading Data...\n");
+		(*stateData) = 2; //NVM allocated
+		PreProcess pp;
+		pp.init("data_SSmall_SH.txt", "dataout.txt");
+		sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
+		sysInfo->xmin = pp.xmin;
+		sysInfo->xmax = pp.xmax;
+		sysInfo->ymin = pp.ymin;
+		sysInfo->ymax = pp.ymax;
+		sysInfo->maxTid = pp.maxTid;
+		(*stateData) = 3; //build data finished
+		printf("Load Data finished\n");
 	}
-	else{
-        stateData = (int*)p_get(1,sizeof(int));
-        char *base = (char*)p_get_base();
-        //check if the process is finished
-        if((*stateData)==1){
-            // malloc and load data again
-            printf("Data not loaded, Loading Data2...\n");
-            tradb = (Trajectory*)p_malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
-            printf("malloc: %p\n", tradb);
-            if(tradb == NULL){
-                printf("error allocate traDB\n");
-            }
-            p_bind(2,tradb,sizeof(Trajectory));
-            (*stateData) = 2; //NVM allocated
-            PreProcess pp;
-            pp.init("data_SSmall_SH.txt", "dataout.txt");
-            sysInfo = (SysInfo*)p_malloc(sizeof(SysInfo));
-            p_bind(3,sysInfo,sizeof(SysInfo));
-            sysInfo->xmin = pp.xmin;
-            sysInfo->xmax = pp.xmax;
-            sysInfo->ymin = pp.ymin;
-            sysInfo->ymax = pp.ymax;
-            sysInfo->maxTid = pp.maxTid;
-            (*stateData) = 3; //build data finished
-            printf("Load Data finished\n");
-        }
-        else if((*stateData)==2){
-            // load data again
-            printf("Data not loaded, Loading Data3...\n");
-            tradb = (Trajectory*)p_get_bind_node(2,&sz);
-            PreProcess pp;
-            pp.init("data_SSmall_SH.txt", "dataout.txt");
-            sysInfo = (SysInfo*)p_malloc(sizeof(SysInfo));
-            p_bind(3,sysInfo,sizeof(SysInfo));
-            sysInfo->xmin = pp.xmin;
-            sysInfo->xmax = pp.xmax;
-            sysInfo->ymin = pp.ymin;
-            sysInfo->ymax = pp.ymax;
-            sysInfo->maxTid = pp.maxTid;
-            (*stateData) = 3;
-            printf("Load Data finished\n");
-        }
-        else{
-            // stateData>=3, load finished, only need bind and query
-            printf("Data loaded, Recovering Data4...\n");
-            tradb = (Trajectory*)p_get_bind_node(2,&sz);
-            sysInfo = (SysInfo*)p_get_bind_node(3,&sz);
-            printf("location:%f,%f;time:%d;Tid:%d\n",tradb[3].points[2].lat,tradb[3].points[2].lon,tradb[3].points[2].time,tradb[3].points[2].tid);
-        }
+	else
+	{
+		stateData = (int*)p_get_malloc(1);
+		char *base = (char*)p_get_base();
+		//check if the process is finished
+		if((*stateData)==1)
+		{
+			// malloc and load data again
+			printf("Data not loaded, Loading Data2...\n");
+			tradb = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
+			memset(tradb,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
+			printf("malloc: %p\n", tradb);
+			if(tradb == NULL)
+			{
+				printf("error allocate traDB\n");
+			}
+			(*stateData) = 2; //NVM allocated
+			PreProcess pp;
+			pp.init("data_SSmall_SH.txt", "dataout.txt");
+			sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
+			sysInfo->xmin = pp.xmin;
+			sysInfo->xmax = pp.xmax;
+			sysInfo->ymin = pp.ymin;
+			sysInfo->ymax = pp.ymax;
+			sysInfo->maxTid = pp.maxTid;
+			(*stateData) = 3; //build data finished
+			printf("Load Data finished\n");
+		}
+		else if((*stateData)==2)
+		{
+			// load data again
+			printf("Data not loaded, Loading Data3...\n");
+			tradb = (Trajectory*)p_get_malloc(2);
+			PreProcess pp;
+			pp.init("data_SSmall_SH.txt", "dataout.txt");
+			sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
+			sysInfo->xmin = pp.xmin;
+			sysInfo->xmax = pp.xmax;
+			sysInfo->ymin = pp.ymin;
+			sysInfo->ymax = pp.ymax;
+			sysInfo->maxTid = pp.maxTid;
+			(*stateData) = 3;
+			printf("Load Data finished\n");
+		}
+		else
+		{
+			// stateData>=3, load finished, only need bind and query
+			printf("Data loaded, Recovering Data4...\n");
+			tradb = (Trajectory*)p_get_malloc(2);
+			sysInfo = (SysInfo*)p_get_malloc(3);
+			printf("location:%f,%f;time:%d;Tid:%d\n",tradb[3].points[2].lat,tradb[3].points[2].lon,tradb[3].points[2].time,tradb[3].points[2].tid);
+		}
 
 	}
 
-    /*
-    Build Grid Index...
-    -----------------------------------------------------------------------------------
-    */
+	/*
+	Build Grid Index...
+	-----------------------------------------------------------------------------------
+	*/
 
-	cout << WriteTrajectoryToFile("dataOut.txt", sysInfo->maxTid) << endl;
+	//cout << WriteTrajectoryToFile("dataOut.txt", sysInfo->maxTid) << endl;
 	cout << "read trajectory success!" << endl << "Start building cell index" << endl;
 	//Grid* g = new Grid(MBB(sysInfo->xmin, sysInfo->ymin, sysInfo->xmax, sysInfo->ymax), 0.003);
 	Grid *g = (Grid*)malloc(sizeof(Grid));
@@ -190,7 +203,8 @@ int main(int argc, char **argv)
 	//g->addDatasetToGrid(tradb, sysInfo->maxTid);
 	addDatasetToGrid(g,tradb, sysInfo->maxTid);
 	int count = 0;
-	for (int i = 0; i <= g->cellnum - 1; i++) {
+	for (int i = 0; i <= g->cellnum - 1; i++)
+	{
 		if (g->cellPtr[i].subTraNum == 0)
 			count++;
 	}
@@ -198,30 +212,31 @@ int main(int argc, char **argv)
 	//int temp[7] = { 553,554,555,556,557,558,559 };
 	//int sizetemp = 7;
 	//g->writeCellsToFile(temp, sizetemp, "111.txt");
-    cout << "Building index successful"<<endl;
-    /*
-    Load Schedular... If system is down, restart after data and index are all fine
-    -----------------------------------------------------------------------------------
-    */
-    Schedular *sche = NULL;
-    if(*stateData==3){
-        //stateData==3 means we have not build a schedular, haven't run
-        sche = (Schedular*)p_malloc(sizeof(Schedular));
-        p_bind(4,sche,sizeof(Schedular));
-        *stateData = 4;
-        sche->lastCompletedJob = -1;
-        cout << "begin running schedular..." << endl;
-        runSchedular(sche,g,tradb);
-    }
-    else{
-        //stateData>=4 means schedular has been in NVM
-        sche = (Schedular*)p_get_bind_node(4,&sz);
-        cout << "begin continuing schedular..." << endl;
-        runSchedular(sche,g,tradb);
-    }
+	cout << "Building index successful"<<endl;
+	/*
+	Load Schedular... If system is down, restart after data and index are all fine
+	-----------------------------------------------------------------------------------
+	*/
+	Schedular *sche = NULL;
+	if(*stateData==3)
+	{
+		//stateData==3 means we have not build a schedular, haven't run
+		sche = (Schedular*)p_malloc(4, sizeof(Schedular));
+		*stateData = 4;
+		sche->lastCompletedJob = -1;
+		cout << "begin running schedular..." << endl;
+		runSchedular(sche,g,tradb);
+	}
+	else
+	{
+		//stateData>=4 means schedular has been in NVM
+		sche = (Schedular*)p_get_malloc(4);
+		cout << "begin continuing schedular..." << endl;
+		runSchedular(sche,g,tradb);
+	}
 //    Schedular schedular;
 //    runSchedular(&schedular,g,tradb);
-    //schedular.run(g,tradb);
+	//schedular.run(g,tradb);
 
 	CPURangeQueryResult* resultTable=NULL;
 	int RangeQueryResultSize = 0;
@@ -248,12 +263,15 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-int WriteTrajectoryToFile(string outFileName,int numTra) {
+int WriteTrajectoryToFile(string outFileName,int numTra)
+{
 	ofstream fout;
 	fout.open(outFileName, ios_base::out);
-	for (int i = 1; i <= numTra; i++) {
+	for (int i = 1; i <= numTra; i++)
+	{
 		fout << i << ": ";
-		for (int j = 0; j <= tradb[i].length - 1; j++) {
+		for (int j = 0; j <= tradb[i].length - 1; j++)
+		{
 			fout << tradb[i].points[j].lon << "," << tradb[i].points[j].lat << ";";
 		}
 		fout << endl;

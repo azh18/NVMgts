@@ -58,7 +58,7 @@ void *p_get(int pId, int iSize);
 
 int p_bind(int id, void *ptr, int size);
 
-void *p_get_bind_node(int pId, int *psize);
+//void *p_get_bind_node(int pId, int *psize);
 
 void *p_get_base();
 /*** helper functions ***/

@@ -13,7 +13,7 @@
 
 
 extern int DaysBetween2Date(string date1, string date2);
-//πÏº£±‡∫≈¥”1ø™ º
+//ËΩ®ËøπÁºñÂè∑‰ªé1ÂºÄÂßã
 extern Trajectory* tradb;
 extern int tradbNVMID;
 extern map<string, tidLinkTable*> vidTotid;
@@ -23,23 +23,23 @@ extern string baseDate;
 
 PreProcess::PreProcess()
 {
-    //ctor
+	//ctor
 }
 
 void split(std::string& s, const std::string& delim,std::vector< std::string >* ret)
 {
-    size_t last = 0;
-    size_t index=s.find_first_of(delim,last);
-    while (index!=std::string::npos)
-    {
-        ret->push_back(s.substr(last,index-last));
-        last=index+1;
-        index=s.find_first_of(delim,last);
-    }
-    if (index-last>0)
-    {
-        ret->push_back(s.substr(last,index-last));
-    }
+	size_t last = 0;
+	size_t index=s.find_first_of(delim,last);
+	while (index!=std::string::npos)
+	{
+		ret->push_back(s.substr(last,index-last));
+		last=index+1;
+		index=s.find_first_of(delim,last);
+	}
+	if (index-last>0)
+	{
+		ret->push_back(s.substr(last,index-last));
+	}
 }
 
 
@@ -50,21 +50,21 @@ bool PreProcess::init(string fileName,string outFileName)
 	xmax = 0;
 	ymin = 90;
 	ymax = 0;
-    fin.open(fileName,ios_base::in);
-    fout.open(outFileName,ios_base::out);
+	fin.open(fileName,ios_base::in);
+	fout.open(outFileName,ios_base::out);
 
-    string buffer;
-    buffer.assign(istreambuf_iterator<char>(fin),istreambuf_iterator<char>());
-    stringstream bufferstream;
-    bufferstream.str(buffer);
-    string linestr;
+	string buffer;
+	buffer.assign(istreambuf_iterator<char>(fin),istreambuf_iterator<char>());
+	stringstream bufferstream;
+	bufferstream.str(buffer);
+	string linestr;
 	//MyTimer timer;
 	//tradb = (Trajectory*)malloc(sizeof(Trajectory) * 100000);
 	//tradb = new Trajectory[MAX_TRAJ_SIZE];
 
-    while(getline(bufferstream,linestr))
-    {
-        string s = linestr;
+	while(getline(bufferstream,linestr))
+	{
+		string s = linestr;
 //		timer.start();
 		VLLT vllt = getTraInfoFromString(s);
 		if (!validPoint(vllt.lon, vllt.lat))
@@ -74,80 +74,82 @@ bool PreProcess::init(string fileName,string outFileName)
 		updateMapBound(vllt.lon, vllt.lat);
 //		timer.stop();
 //		printf("vllt time: %lf\n", timer.elapse());
-        iter = vidTotid.find(vllt.vid);
-        // maxTid «µ±«∞±‡µƒ◊Ó¥ÛµƒπÏº£∫≈
-        int nowTid = this->maxTid;
-        //»Áπ˚∏√vid“—æ≠¥Ê‘⁄£¨ƒ«√¥¥”’‚∏ˆ¡¥±Ì÷–’“µΩƒ©Œ≤µƒº¥µ±«∞“™ÃÌº”Ω¯»•µƒπÏº££¨’“≥ˆπÏº£∫≈
+		iter = vidTotid.find(vllt.vid);
+		// maxTidÊòØÂΩìÂâçÁºñÁöÑÊúÄÂ§ßÁöÑËΩ®ËøπÂè∑
+		int nowTid = this->maxTid;
+		//Â¶ÇÊûúËØ•vidÂ∑≤ÁªèÂ≠òÂú®ÔºåÈÇ£‰πà‰ªéËøô‰∏™ÈìæË°®‰∏≠ÊâæÂà∞Êú´Â∞æÁöÑÂç≥ÂΩìÂâçË¶ÅÊ∑ªÂä†ËøõÂéªÁöÑËΩ®ËøπÔºåÊâæÂá∫ËΩ®ËøπÂè∑
 //		timer.start();
-        if(iter!=vidTotid.end())
-        {
-            tidLinkTable* table = iter->second;
-            while(table->next!=NULL)
-            {
-                table = table->next;
-            }
-            nowTid = table->tid;
-        }
-        //–¬µƒvid
-        else
-        {
-            //∑÷≈‰–¬µƒπÏº£±‡∫≈£¨“ÚŒ™œ»∑÷≈‰£¨À˘“‘πÏº£±‡∫≈¥”1ø™ º
-            this->maxTid++;
+		if(iter!=vidTotid.end())
+		{
+			tidLinkTable* table = iter->second;
+			while(table->next!=NULL)
+			{
+				table = table->next;
+			}
+			nowTid = table->tid;
+		}
+		//Êñ∞ÁöÑvid
+		else
+		{
+			//ÂàÜÈÖçÊñ∞ÁöÑËΩ®ËøπÁºñÂè∑ÔºåÂõ†‰∏∫ÂÖàÂàÜÈÖçÔºåÊâÄ‰ª•ËΩ®ËøπÁºñÂè∑‰ªé1ÂºÄÂßã
+			this->maxTid++;
 			nowTid = this->maxTid;
-            tidLinkTable* tidNode = new tidLinkTable();
-            tidNode->tid = nowTid;
-            tidNode->next = NULL;
-            vidTotid.insert(pair<string,tidLinkTable*>(vllt.vid,tidNode));
-            printf("access: %p\n", tradb);
-            tradb[nowTid].vid = vllt.vid;
+			tidLinkTable* tidNode = new tidLinkTable();
+			tidNode->tid = nowTid;
+			tidNode->next = NULL;
+			vidTotid.insert(pair<string,tidLinkTable*>(vllt.vid,tidNode));
+			printf("access: %p\n", tradb);
+			//tradb[nowTid].vid = vllt.vid;
+			memcpy(tradb[nowTid].vid,vllt.vid.c_str(),vllt.vid.length());
 			tradb[nowTid].tid = nowTid;
-        }
+		}
 //		timer.stop();
 //		printf("find tid time: %lf\n", timer.elapse());
-        //’“≥ˆπÏº£∫≈∫Û£¨ÃÌº”πÏº£
+		//ÊâæÂá∫ËΩ®ËøπÂè∑ÂêéÔºåÊ∑ªÂä†ËΩ®Ëøπ
 //		timer.start();
-        int ret = tradb[nowTid].addSamplePoints(vllt.lon,vllt.lat,vllt.time);
-        //»Áπ˚≥…π¶£¨ÃÌº”œ¬“ª∏ˆµ„
+		//int ret = tradb[nowTid].addSamplePoints(vllt.lon,vllt.lat,vllt.time);
+		int ret = addSamplePoints(&tradb[nowTid],vllt.lon,vllt.lat,vllt.time);
+		//Â¶ÇÊûúÊàêÂäüÔºåÊ∑ªÂä†‰∏ã‰∏Ä‰∏™ÁÇπ
 
-        if(ret == 0)
-        {
+		if(ret == 0)
+		{
 //			timer.stop();
 //			printf("add point time: %lf\n", timer.elapse());
 			continue;
-        }
-        //»Áπ˚≥¨π˝πÏº£◊Ó≥§œﬁ÷∆£¨–¬ø™“ªÃıπÏº££¨º”‘⁄vid±Ì∫Û√Ê
-        //”Î…œ∏ˆ≤…—˘µ„ ±º‰≤Óæ‡Ã´∂‡£¨“≤“™–¬ø™“ªÃıπÏº££¨º”‘⁄vid±Ì∫Û√Ê
-        else if((ret == 1) || (ret == 2))
-        {
-            tidLinkTable* node = vidTotid.find(vllt.vid)->second;
-            while(node->next!=NULL) node = node->next;
-            tidLinkTable* newNode = new tidLinkTable();
-            newNode->next = NULL;
+		}
+		//Â¶ÇÊûúË∂ÖËøáËΩ®ËøπÊúÄÈïøÈôêÂà∂ÔºåÊñ∞ÂºÄ‰∏ÄÊù°ËΩ®ËøπÔºåÂä†Âú®vidË°®ÂêéÈù¢
+		//‰∏é‰∏ä‰∏™ÈááÊ†∑ÁÇπÊó∂Èó¥Â∑ÆË∑ùÂ§™Â§öÔºå‰πüË¶ÅÊñ∞ÂºÄ‰∏ÄÊù°ËΩ®ËøπÔºåÂä†Âú®vidË°®ÂêéÈù¢
+		else if((ret == 1) || (ret == 2))
+		{
+			tidLinkTable* node = vidTotid.find(vllt.vid)->second;
+			while(node->next!=NULL) node = node->next;
+			tidLinkTable* newNode = new tidLinkTable();
+			newNode->next = NULL;
 			node->next = newNode;
-            this->maxTid++;
+			this->maxTid++;
 			nowTid = this->maxTid;
-            newNode->tid = nowTid;
-			if (tradb[nowTid].addSamplePoints(vllt.lon, vllt.lat, vllt.time)!=0)//“ª∂®ƒ‹≥…π¶
+			newNode->tid = nowTid;
+			if (addSamplePoints(&tradb[nowTid],vllt.lon,vllt.lat,vllt.time)!=0)//‰∏ÄÂÆöËÉΩÊàêÂäü
 				throw("error");
-            tradb[nowTid].vid = vllt.vid;
+			memcpy(tradb[nowTid].vid,vllt.vid.c_str(),vllt.vid.length());
 			tradb[nowTid].tid = nowTid;
-        }
-        //Ã´‘∂£¨…·∆˙∏√µ„
-        //µ´Œ™¡À–ﬁ∏¥µ⁄“ª∏ˆµ„æÕ «¥ÌŒÛµ„µƒ«Èøˆ£¨œ»º«¬º∏√µ„£¨»ª∫Ûø¥œ¬“ª∏ˆ£¨»Áπ˚¥ÌŒÛµ„¡¨–¯ª˝¿€πª10∏ˆ£¨‘Ú±Ì√˜µ⁄“ª∏ˆµ„≤≈ «¥Ìµƒ£®œ»∫ˆ¬‘’‚∏ˆ«Èøˆ£©
-        else if(ret == 3)
-        {
+		}
+		//Â§™ËøúÔºåËàçÂºÉËØ•ÁÇπ
+		//‰ΩÜ‰∏∫‰∫Ü‰øÆÂ§çÁ¨¨‰∏Ä‰∏™ÁÇπÂ∞±ÊòØÈîôËØØÁÇπÁöÑÊÉÖÂÜµÔºåÂÖàËÆ∞ÂΩïËØ•ÁÇπÔºåÁÑ∂ÂêéÁúã‰∏ã‰∏Ä‰∏™ÔºåÂ¶ÇÊûúÈîôËØØÁÇπËøûÁª≠ÁßØÁ¥ØÂ§ü10‰∏™ÔºåÂàôË°®ÊòéÁ¨¨‰∏Ä‰∏™ÁÇπÊâçÊòØÈîôÁöÑÔºàÂÖàÂøΩÁï•Ëøô‰∏™ÊÉÖÂÜµÔºâ
+		else if(ret == 3)
+		{
 //            tradb[nowTid].errPointBuff[tradb[nowTid].errCounter] = SamplePoint(vllt.lon,vllt.lat,vllt.time,nowTid);
 //            tradb[nowTid].errCounter++;
 //            if(tradb[nowTid].errCounter>=10)
 //            {
 //
 //            }
-            continue;
-        }
+			continue;
+		}
 
 
-    }
-    return 0;
+	}
+	return 0;
 }
 
 inline bool PreProcess::updateMapBound(float lon,float lat)
@@ -179,18 +181,19 @@ bool PreProcess::validPoint(float lon, float lat)
 VLLT PreProcess::getTraInfoFromString(string s)
 //get Vid Longitude Latitude TimeStamp from string s
 {
-    VLLT vllt;
-    vector<string> partOfLine;
-    string dot = ",";
-    split(s,dot,&partOfLine);
-	if (partOfLine.size() < 12) {
+	VLLT vllt;
+	vector<string> partOfLine;
+	string dot = ",";
+	split(s,dot,&partOfLine);
+	if (partOfLine.size() < 12)
+	{
 		VLLT a;
 		a.vid = "0000";
 		return a;
 	}
-    vllt.vid = partOfLine[2];
-    vllt.lon = atof(partOfLine[3].c_str());
-    vllt.lat = atof(partOfLine[4].c_str());
+	vllt.vid = partOfLine[2];
+	vllt.lon = atof(partOfLine[3].c_str());
+	vllt.lat = atof(partOfLine[4].c_str());
 	vector<string> datetime;
 	split(partOfLine[8], string(" ") , &datetime);
 	vector<string> timeValue;
@@ -200,10 +203,10 @@ VLLT PreProcess::getTraInfoFromString(string s)
 	int minute = atoi(timeValue[1].c_str());
 	int second = atoi(timeValue[2].c_str());
 	vllt.time = days * 86400 + hours * 3600 + minute * 60 + second;
-    return vllt;
+	return vllt;
 }
 
 PreProcess::~PreProcess()
 {
-    //dtor
+	//dtor
 }

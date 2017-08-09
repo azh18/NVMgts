@@ -1,7 +1,7 @@
 #pragma once
 #define MAX_TRAJ_SIZE 1000
 #define MAXLENGTH 512
-//MAXGAPÊÇ×î´ó¹ì¼£ÄÚÊ±¼ä¼ä¸ô£¬Èç¹û³¬¹ıÕâ¸ö¼ä¸ôÓ¦¸Ã±»ÊÓÎªÁ½Ìõ¹ì¼£
+//MAXGAPæ˜¯æœ€å¤§è½¨è¿¹å†…æ—¶é—´é—´éš”ï¼Œå¦‚æœè¶…è¿‡è¿™ä¸ªé—´éš”åº”è¯¥è¢«è§†ä¸ºä¸¤æ¡è½¨è¿¹
 #define MAXGAP 3600
 
 #define EPSILON 10
@@ -10,11 +10,12 @@
 
 #include <stdio.h>
 #include <string>
-
+extern "C"{
 #include "p_mmap.h"
-//test:ÒÔcellÎª»ù´¡´æ´¢
+}
+//test:ä»¥cellä¸ºåŸºç¡€å­˜å‚¨
 #define _CELL_BASED_STORAGE
-//test:Similarity query based on naive grid£¬ÒÔ¶¨´óĞ¡µÄgridÀ´Ë÷Òı
+//test:Similarity query based on naive gridï¼Œä»¥å®šå¤§å°çš„gridæ¥ç´¢å¼•
 //#define _SIMILARITY
 
 typedef struct Point {
