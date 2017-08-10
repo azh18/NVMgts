@@ -68,6 +68,7 @@ int BufferManager::getKey(int key, Cell *ce, Trajectory* db){
 			CacheNode *oldTail = this->tail;
 			this->remove(this->tail);
 			free(oldTail);
+			printf("delete a block\n");
                 }
                 //增加新元素
                 CacheNode* node = (CacheNode*)malloc(sizeof(CacheNode));

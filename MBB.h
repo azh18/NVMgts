@@ -6,6 +6,7 @@ public:
 	MBB(float val_xmin, float val_ymin, float val_xmax, float val_ymax);
 	bool pInBox(float x, float y);
 	int intersect(MBB& b);
+	int randomGenerateInnerMBB(MBB *generated, int generateNum);
 	MBB();
 	~MBB();
 };

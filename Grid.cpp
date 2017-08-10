@@ -29,7 +29,7 @@ int initGrid(Grid *g,const MBB& mbb,float val_cell_size)
 		}
 	}
 	g->buffer.cellFetchTime.resize(g->cellnum,0);
-	g->buffer.maxCellInDRAM = 500;
+	g->buffer.maxCellInDRAM = 50;
 	g->buffer.thresReadTime = 10;
 	return 0;
 }
@@ -192,10 +192,13 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			candidatesCellID[counter] = i;
 			counter++;
 		}
-		for (int i = c; i <= d; i++)
+		if(g4 - g3 >= 1)
 		{
-			candidatesCellID[counter] = i;
-			counter++;
+			for (int i = c; i <= d; i++)
+			{
+				candidatesCellID[counter] = i;
+				counter++;
+			}
 		}
 		if (g4 - g3 >= 2)
 		{
@@ -211,10 +214,15 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			}
 		}
 		if (counter != candidateSize)
-			cerr << "size error in range query candidates cell" << endl;
+			cerr << "size error in range query candidates cell" << counter << "," << candidateSize<<endl;
 
 		//一些直接是result
-		DirectresultSize = (b - a - 1)*(g4 - g3 - 1);
+		if((b>a) &&(g4>g3) )
+			DirectresultSize = (b - a - 1)*(g4 - g3 - 1);
+		else
+			DirectresultSize = 0;
+
+
 		counter = 0;
 		directResultsCellID = (int*)malloc(DirectresultSize * sizeof(int));
 		if (b >= a + 2 && c >= a + 2 * m)
@@ -229,7 +237,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			}
 		}
 		if (counter != DirectresultSize)
-			cerr << "size error in range query directresult cell" <<counter<<","<<candidateSize<< endl;
+			cerr << "size error in range query directresult cell" <<counter<<","<< DirectresultSize<< endl;
 
 		//对所有candidateCell检测，可并行
 		counter = 0;
@@ -237,14 +245,14 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 		{
 			int cellID = candidatesCellID[i];
 			Cell &ce = g->cellPtr[candidatesCellID[i]];
-                        if(g->buffer.getKey(cellID,&ce,tradb))
-                        {
+			if(g->buffer.getKey(cellID,&ce,tradb))
+			{
 				printf("fetch DRAM\n");
 				//点在DRAM内
-				for(int j=0;j<=ce.subTraNum-1;j++)
+				for(int j=0; j<=ce.subTraNum-1; j++)
 				{
-                                        for(int k=0;k<=g->buffer.bufferData[cellID].subTraData[j].length-1;k++)
-                                        {
+					for(int k=0; k<=g->buffer.bufferData[cellID].subTraData[j].length-1; k++)
+					{
 						SamplePoint p;
 						p.lat = g->buffer.bufferData[cellID].subTraData[j].points[k].lat;
 						p.lon = g->buffer.bufferData[cellID].subTraData[j].points[k].lon;
@@ -264,12 +272,12 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 							nowResult = newResult;
 							counter++;
 						}
-                                        }
+					}
 				}
 
-                        }
-                        else
-                        {
+			}
+			else
+			{
 				for (int j = 0; j <= ce.subTraNum - 1; j++)
 				{
 					int traid = ce.subTraTable[j].traID;
@@ -292,7 +300,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 						}
 					}
 				}
-                        }
+			}
 
 
 		}
@@ -306,11 +314,11 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			{
 				//点在DRAM内
 				printf("fetch DRAM\n");
-				for(int j=0;j<=ce.subTraNum-1;j++)
+				for(int j=0; j<=ce.subTraNum-1; j++)
 				{
 					printf("cell %d in DRAM: ",g->buffer.bufferData[cellID].cellID);
-                                        for(int k=0;k<=g->buffer.bufferData[cellID].subTraData[j].length-1;k++)
-                                        {
+					for(int k=0; k<=g->buffer.bufferData[cellID].subTraData[j].length-1; k++)
+					{
 						SamplePoint p;
 						p.lat = g->buffer.bufferData[cellID].subTraData[j].points[k].lat;
 						p.lon = g->buffer.bufferData[cellID].subTraData[j].points[k].lon;
@@ -330,7 +338,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 							nowResult = newResult;
 							counter++;
 						}
-                                        }
+					}
 				}
 			}
 			else

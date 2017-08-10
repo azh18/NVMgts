@@ -11,7 +11,7 @@
 #include "Grid.h"
 #include "Schedular.h"
 
-extern "C"{
+extern "C" {
 #include "p_mmap.h"
 }
 
@@ -213,6 +213,24 @@ int main(int argc, char **argv)
 	//int sizetemp = 7;
 	//g->writeCellsToFile(temp, sizetemp, "111.txt");
 	cout << "Building index successful"<<endl;
+
+	if(argc == 2 && argv[1][0]== 's')
+	{
+		CPURangeQueryResult* resultTable=NULL;
+		int RangeQueryResultSize = 0;
+
+		MBB SHMbb = MBB(121.36, 31.10, 121.56, 31.36);
+		MBB *queryMBB = new MBB[1000];
+		SHMbb.randomGenerateInnerMBB(queryMBB,1000);
+		for (int i=0; i<=999; i++)
+		{
+			printf("%f,%f,%f,%f\n",queryMBB[i].xmin,queryMBB[i].xmax,queryMBB[i].ymin,queryMBB[i].ymax);
+			rangeQuery(g,queryMBB[i],resultTable,&RangeQueryResultSize);
+		}
+
+		return 0;
+	}
+
 	/*
 	Load Schedular... If system is down, restart after data and index are all fine
 	-----------------------------------------------------------------------------------
@@ -238,11 +256,9 @@ int main(int argc, char **argv)
 //    runSchedular(&schedular,g,tradb);
 	//schedular.run(g,tradb);
 
-	CPURangeQueryResult* resultTable=NULL;
-	int RangeQueryResultSize = 0;
-	MBB queryMbb = MBB(121.4, 31.15, 121.45, 31.20);
+
 	//g->rangeQuery(queryMbb, resultTable, &RangeQueryResultSize);
-	rangeQuery(g,queryMbb, resultTable, &RangeQueryResultSize);
+	//rangeQuery(g,queryMbb, resultTable, &RangeQueryResultSize);
 
 
 //
