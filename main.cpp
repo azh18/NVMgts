@@ -15,6 +15,8 @@ extern "C" {
 #include "p_mmap.h"
 }
 
+
+
 using namespace std;
 
 map<string, tidLinkTable*> vidTotid;
@@ -35,6 +37,12 @@ int tradbNVMID = -1;
 string baseDate = "2014-07-01";
 SysInfo *sysInfo=NULL;
 int *stateData = NULL;
+Schedular *sche = NULL;
+// 系统模式，DRAM&SCM
+//0:纯DRAM
+//1:SCM-DRAM
+int systemMode = 1;
+
 
 /*
 NVM  Table
@@ -48,14 +56,56 @@ No                              note
 6                               array in the queue
 */
 
+int cleanData()
+{
+	if(p_get_malloc(1)==NULL)
+	{
+		printf("Cleaning Data0...\n");
+	}
+	else
+	{
+
+		printf("Cleaning Data2...\n");
+		stateData = (int*)p_get_malloc(1);
+		//p_free(stateData);
+
+		sche = (Schedular*)p_get_malloc(4);
+		if(sche != NULL)
+			destroySchedular(sche);
+
+		printf("%d",(*stateData));
+		tradb = (Trajectory*)p_get_malloc(2);
+
+		if(*stateData > 1)
+		{
+			p_free(2);
+			*stateData = 1;
+			printf("freed tradb");
+		}
+
+		sysInfo = (SysInfo*)p_get_malloc(3);
+		if(sysInfo != NULL)
+			p_free(3);
+
+
+		*stateData = 1;
+
+	}
+	p_clear();
+	cout << "finishing deleting..." << endl;
+	return 0;
+}
+
+
 int main(int argc, char **argv)
 {
 	//printf("hellp");
 
 
+
 	int WriteTrajectoryToFile(string outFileName, int numTra);
-	cout << "Hello world!" << endl;
-	cout << sizeof(Cell) << endl;
+	//cout << "Hello world!" << endl;
+	//cout << sizeof(Cell) << endl;
 	//ifstream fin;
 	//float lon1, lat1, lon2, lat2;
 	//lat1 = +34.15265;
@@ -64,43 +114,64 @@ int main(int argc, char **argv)
 	//lon2 = +113.10222;
 	//cout << calculateDistance(lat1, lon1, lat2, lon2) << endl;
 	int sz;
-	p_clear();
-	p_init(20*1024*1024);
+	char c;
+	//fgets(c,1,systemState);
+	char config[100];
+	FILE* readState = fopen("config.ini","r+");
+	if(readState!=NULL)
+	//systemState
+	{
+		c = fgetc(readState);
+		printf("%c\n",c);
+
+		systemMode = atoi(&c);
+		fclose(readState);
+	}
+	if(systemMode == 1)
+	{
+		p_init(20*1024*1024);
+		printf("[init] System is now at SCM-DRAM mode.\n");
+	}
+	else
+	{
+		printf("[init] System is now at pure DRAM mode.\n");
+	}
+
+	if(argc == 3 && argv[1][0]== 'm' && argv[2][0] == 'd')
+	{
+		FILE* systemState = fopen("config.ini","w+");
+		if(systemMode == 1)
+			int ret = cleanData();
+		systemMode = 0;
+		fputc('0',systemState);
+		fclose(systemState);
+		printf("Switched to pure DRAM mode.\nPlease restart NVM_GTS\n");
+		return 0;
+	}
+
+	if(argc == 3 && argv[1][0] == 'm' && argv[2][0] == 's')
+	{
+		FILE *systemState = fopen("config.ini","w+");
+		if(systemMode == 1)
+			int ret = cleanData();
+		systemMode = 1;
+		fputc('1',systemState);
+		fclose(systemState);
+		printf("Switched to SCM-DRAM mode.\nPlease restart NVM_GTS\n");
+		return 0;
+	}
+
 
 	//clean the data but failed
 	if(argc == 2 && argv[1][0]== 'c')
 	{
 		//*stateData = 3;
-		if(p_get_malloc(1)==NULL)
-		{
-			printf("Cleaning Data0...\n");
-		}
+		int ret = cleanData();
+		if(ret == 0)
+			return 0;
 		else
-		{
-			printf("Cleaning Data2...\n");
-			stateData = (int*)p_get_malloc(1);
-			//p_free(stateData);
-
-			printf("%d",(*stateData));
-			tradb = (Trajectory*)p_get_malloc(2);
-
-			if(*stateData > 1)
-			{
-				p_free(2);
-				*stateData = 1;
-				printf("freed tradb");
-			}
-
-			sysInfo = (SysInfo*)p_get_malloc(3);
-			if(sysInfo != NULL)
-				p_free(3);
-			*stateData = 1;
-
-		}
-		p_clear();
-		cout << "finishing deleting..." << endl;
-		//(*stateData) = 1;
-		return 0;
+			printf("Something wrong with cleanning procedure.\n");
+		return 1;
 	}
 
 
@@ -109,48 +180,25 @@ int main(int argc, char **argv)
 	If system is down, recover the pointer from NVM
 	-----------------------------------------------------------------------------------
 	*/
-	if((p_get_malloc(1)==NULL)||(argc == 2 && argv[1][0]== 'r'))
+	if(systemMode == 0)
 	{
-		printf("Data not loaded, Loading Data...\n");
-
-//        stateData = (int*)p_malloc(sizeof(int));
-//        p_bind(1,stateData,sizeof(int));
-		stateData = (int*)p_malloc(1,sizeof(int));
-		//p_bind(1,stateData,sizeof(int));
-		(*stateData) = 1; //build the stateData but not load in data
-		printf("Allocating NVM...\n");
-		tradb = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
-		memset(tradb,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
-		printf("malloc:%p\n",tradb);
-		printf("Loading Data...\n");
-		(*stateData) = 2; //NVM allocated
-		PreProcess pp;
-		pp.init("data_SSmall_SH.txt", "dataout.txt");
-		sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
-		sysInfo->xmin = pp.xmin;
-		sysInfo->xmax = pp.xmax;
-		sysInfo->ymin = pp.ymin;
-		sysInfo->ymax = pp.ymax;
-		sysInfo->maxTid = pp.maxTid;
-		(*stateData) = 3; //build data finished
-		printf("Load Data finished\n");
 	}
 	else
 	{
-		stateData = (int*)p_get_malloc(1);
-		char *base = (char*)p_get_base();
-		//check if the process is finished
-		if((*stateData)==1)
+		if((p_get_malloc(1)==NULL)||(argc == 2 && argv[1][0]== 'r'))
 		{
-			// malloc and load data again
-			printf("Data not loaded, Loading Data2...\n");
+			printf("Data not loaded, Loading Data...\n");
+
+//        stateData = (int*)p_malloc(sizeof(int));
+//        p_bind(1,stateData,sizeof(int));
+			stateData = (int*)p_malloc(1,sizeof(int));
+			//p_bind(1,stateData,sizeof(int));
+			(*stateData) = 1; //build the stateData but not load in data
+			printf("Allocating NVM...\n");
 			tradb = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
 			memset(tradb,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
-			printf("malloc: %p\n", tradb);
-			if(tradb == NULL)
-			{
-				printf("error allocate traDB\n");
-			}
+			printf("malloc:%p\n",tradb);
+			printf("Loading Data...\n");
 			(*stateData) = 2; //NVM allocated
 			PreProcess pp;
 			pp.init("data_SSmall_SH.txt", "dataout.txt");
@@ -163,33 +211,61 @@ int main(int argc, char **argv)
 			(*stateData) = 3; //build data finished
 			printf("Load Data finished\n");
 		}
-		else if((*stateData)==2)
-		{
-			// load data again
-			printf("Data not loaded, Loading Data3...\n");
-			tradb = (Trajectory*)p_get_malloc(2);
-			PreProcess pp;
-			pp.init("data_SSmall_SH.txt", "dataout.txt");
-			sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
-			sysInfo->xmin = pp.xmin;
-			sysInfo->xmax = pp.xmax;
-			sysInfo->ymin = pp.ymin;
-			sysInfo->ymax = pp.ymax;
-			sysInfo->maxTid = pp.maxTid;
-			(*stateData) = 3;
-			printf("Load Data finished\n");
-		}
 		else
 		{
-			// stateData>=3, load finished, only need bind and query
-			printf("Data loaded, Recovering Data4...\n");
-			tradb = (Trajectory*)p_get_malloc(2);
-			sysInfo = (SysInfo*)p_get_malloc(3);
-			printf("location:%f,%f;time:%d;Tid:%d\n",tradb[3].points[2].lat,tradb[3].points[2].lon,tradb[3].points[2].time,tradb[3].points[2].tid);
+			stateData = (int*)p_get_malloc(1);
+			char *base = (char*)p_get_base();
+			//check if the process is finished
+			if((*stateData)==1)
+			{
+				// malloc and load data again
+				printf("Data not loaded, Loading Data2...\n");
+				tradb = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
+				memset(tradb,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
+				printf("malloc: %p\n", tradb);
+				if(tradb == NULL)
+				{
+					printf("error allocate traDB\n");
+				}
+				(*stateData) = 2; //NVM allocated
+				PreProcess pp;
+				pp.init("data_SSmall_SH.txt", "dataout.txt");
+				sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
+				sysInfo->xmin = pp.xmin;
+				sysInfo->xmax = pp.xmax;
+				sysInfo->ymin = pp.ymin;
+				sysInfo->ymax = pp.ymax;
+				sysInfo->maxTid = pp.maxTid;
+				(*stateData) = 3; //build data finished
+				printf("Load Data finished\n");
+			}
+			else if((*stateData)==2)
+			{
+				// load data again
+				printf("Data not loaded, Loading Data3...\n");
+				tradb = (Trajectory*)p_get_malloc(2);
+				PreProcess pp;
+				pp.init("data_SSmall_SH.txt", "dataout.txt");
+				sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
+				sysInfo->xmin = pp.xmin;
+				sysInfo->xmax = pp.xmax;
+				sysInfo->ymin = pp.ymin;
+				sysInfo->ymax = pp.ymax;
+				sysInfo->maxTid = pp.maxTid;
+				(*stateData) = 3;
+				printf("Load Data finished\n");
+			}
+			else
+			{
+				// stateData>=3, load finished, only need bind and query
+				printf("Data loaded, Recovering Data4...\n");
+				tradb = (Trajectory*)p_get_malloc(2);
+				sysInfo = (SysInfo*)p_get_malloc(3);
+				printf("location:%f,%f;time:%d;Tid:%d\n",tradb[3].points[2].lat,tradb[3].points[2].lon,tradb[3].points[2].time,tradb[3].points[2].tid);
+			}
+
 		}
-
 	}
-
 	/*
 	Build Grid Index...
 	-----------------------------------------------------------------------------------
@@ -216,6 +292,7 @@ int main(int argc, char **argv)
 
 	if(argc == 2 && argv[1][0]== 's')
 	{
+		//单独用户输入query测试
 		CPURangeQueryResult* resultTable=NULL;
 		int RangeQueryResultSize = 0;
 
@@ -231,26 +308,29 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	/*
-	Load Schedular... If system is down, restart after data and index are all fine
-	-----------------------------------------------------------------------------------
-	*/
-	Schedular *sche = NULL;
-	if(*stateData==3)
+	if(argc == 2 && argv[1][0]== 'f')
 	{
-		//stateData==3 means we have not build a schedular, haven't run
-		sche = (Schedular*)p_malloc(4, sizeof(Schedular));
-		*stateData = 4;
-		sche->lastCompletedJob = -1;
-		cout << "begin running schedular..." << endl;
-		runSchedular(sche,g,tradb);
-	}
-	else
-	{
-		//stateData>=4 means schedular has been in NVM
-		sche = (Schedular*)p_get_malloc(4);
-		cout << "begin continuing schedular..." << endl;
-		runSchedular(sche,g,tradb);
+		/*
+		Load Schedular... If system is down, restart after data and index are all fine
+		-----------------------------------------------------------------------------------
+		*/
+
+		if(*stateData==3)
+		{
+			//stateData==3 means we have not build a schedular, haven't run
+			sche = (Schedular*)p_malloc(4, sizeof(Schedular));
+			*stateData = 4;
+			sche->lastCompletedJob = -1;
+			cout << "begin running schedular..." << endl;
+			runSchedular(sche,g,tradb);
+		}
+		else
+		{
+			//stateData>=4 means schedular has been in NVM
+			sche = (Schedular*)p_get_malloc(4);
+			cout << "begin continuing schedular..." << endl;
+			runSchedular(sche,g,tradb);
+		}
 	}
 //    Schedular schedular;
 //    runSchedular(&schedular,g,tradb);

@@ -29,8 +29,8 @@ int initGrid(Grid *g,const MBB& mbb,float val_cell_size)
 		}
 	}
 	g->buffer.cellFetchTime.resize(g->cellnum,0);
-	g->buffer.maxCellInDRAM = 50;
-	g->buffer.thresReadTime = 10;
+	g->buffer.maxCellInDRAM = 1000;
+	g->buffer.thresReadTime = 3;
 	return 0;
 }
 
@@ -207,10 +207,13 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 				candidatesCellID[counter] = i;
 				counter++;
 			}
-			for (int i = b + m; i <= b + (g4 - g3- 1)*m; i = i + m)
+			if(g2 > g1)
 			{
-				candidatesCellID[counter] = i;
-				counter++;
+				for (int i = b + m; i <= b + (g4 - g3- 1)*m; i = i + m)
+				{
+					candidatesCellID[counter] = i;
+					counter++;
+				}
 			}
 		}
 		if (counter != candidateSize)
@@ -278,6 +281,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			}
 			else
 			{
+				printf("fetch NVM\n");
 				for (int j = 0; j <= ce.subTraNum - 1; j++)
 				{
 					int traid = ce.subTraTable[j].traID;
@@ -316,7 +320,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 				printf("fetch DRAM\n");
 				for(int j=0; j<=ce.subTraNum-1; j++)
 				{
-					printf("cell %d in DRAM: ",g->buffer.bufferData[cellID].cellID);
+					// printf("cell %d in DRAM: ",g->buffer.bufferData[cellID].cellID);
 					for(int k=0; k<=g->buffer.bufferData[cellID].subTraData[j].length-1; k++)
 					{
 						SamplePoint p;
@@ -344,6 +348,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			else
 			{
 				//点在NVM内
+				printf("fetch NVM\n");
 				for (int j = 0; j <= ce.subTraNum - 1; j++)
 				{
 					int traid = ce.subTraTable[j].traID;
