@@ -263,6 +263,7 @@ int executeQueryInSchedular(Schedular *sche)
 {
 	Job *pJob = front(sche->jobsBuffQueue);
 	//this->gridIndex->rangeQuery(pJob->queryMBR,pJob->resultData,&pJob->resultNum); //这里仅仅是写入了DRAM里，有malloc操作！
+	pJob->resultData = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
 	rangeQuery(sche->gridIndex,pJob->queryMBR,pJob->resultData,&pJob->resultNum);
 	return 0;
 }
@@ -288,17 +289,18 @@ int writeResult(Schedular *sche)
 	CPURangeQueryResult* pStart = pJob->resultData;
 	CPURangeQueryResult *pLast=NULL;
 	FILE *fp = fopen("RangeQueryResult.txt","a+");
-	fprintf(fp,"Query ID:%d, Result Num:%d\n",pJob->jobID,pJob->resultNum);
+	fprintf(fp,"Query ID:%d\nResult Num:%d\n",pJob->jobID,pJob->resultNum);
 	for(int i=0; i<=resultNum-1; i++)
 	{
 		if(pStart!=NULL)
 		{
-			fprintf(fp,"%f,%f,%d\n",pStart->x,pStart->y,pStart->traid);
+			fprintf(fp,"[%d](%f,%f)\t",pStart->traid,pStart->x,pStart->y);
 			pLast = pStart;
 			pStart = pStart->next;
 			free(pLast);
 		}
 	}
+	fprintf(fp,"\n");
 	fclose(fp);
 	return 0;
 }

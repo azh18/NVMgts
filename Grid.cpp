@@ -138,7 +138,6 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 	//这部分要移植到gpu上，尽量用底层函数写
 	//为了可比较，在这个函数内仅仅要求把轨迹查出来就行了，result的组织交由QueryResult类来做
 	//判断range是否超出地图
-	ResultTable = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
 	ResultTable->traid = -1; //table开头traid为-1 flag
 	ResultTable->next = NULL;
 	CPURangeQueryResult* newResult,* nowResult;
@@ -281,7 +280,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			}
 			else
 			{
-				printf("fetch NVM\n");
+				//printf("fetch NVM\n");
 				for (int j = 0; j <= ce.subTraNum - 1; j++)
 				{
 					int traid = ce.subTraTable[j].traID;
@@ -348,7 +347,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			else
 			{
 				//点在NVM内
-				printf("fetch NVM\n");
+				//printf("fetch NVM\n");
 				for (int j = 0; j <= ce.subTraNum - 1; j++)
 				{
 					int traid = ce.subTraTable[j].traID;

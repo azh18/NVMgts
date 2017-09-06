@@ -93,6 +93,7 @@ int cleanData()
 	}
 	p_clear();
 	cout << "finishing deleting..." << endl;
+	cout << "Clean Data Successfully!" << endl;
 	return 0;
 }
 
@@ -117,6 +118,7 @@ int main(int argc, char **argv)
 	char c;
 	//fgets(c,1,systemState);
 	char config[100];
+	// 系统模式设置（纯DRAM或混合内存模式）
 	FILE* readState = fopen("config.ini","r+");
 	if(readState!=NULL)
 	//systemState
@@ -180,10 +182,10 @@ int main(int argc, char **argv)
 	If system is down, recover the pointer from NVM
 	-----------------------------------------------------------------------------------
 	*/
-	if(systemMode == 0)
+	if(systemMode == 0) //纯内存模式
 	{
 	}
-	else
+	else //混合内存模式
 	{
 		if((p_get_malloc(1)==NULL)||(argc == 2 && argv[1][0]== 'r'))
 		{
@@ -293,16 +295,26 @@ int main(int argc, char **argv)
 	if(argc == 2 && argv[1][0]== 's')
 	{
 		//单独用户输入query测试
-		CPURangeQueryResult* resultTable=NULL;
+		CPURangeQueryResult* resultTable=(CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
 		int RangeQueryResultSize = 0;
 
 		MBB SHMbb = MBB(121.36, 31.10, 121.56, 31.36);
 		MBB *queryMBB = new MBB[1000];
 		SHMbb.randomGenerateInnerMBB(queryMBB,1000);
-		for (int i=0; i<=999; i++)
+		int qcnt=0;
+		for (int i=0; i<=1; i++)
 		{
-			printf("%f,%f,%f,%f\n",queryMBB[i].xmin,queryMBB[i].xmax,queryMBB[i].ymin,queryMBB[i].ymax);
+			printf("RQ(%f,%f,%f,%f)\n",queryMBB[i].xmin,queryMBB[i].xmax,queryMBB[i].ymin,queryMBB[i].ymax);
 			rangeQuery(g,queryMBB[i],resultTable,&RangeQueryResultSize);
+			printf("Query ID: %d\n", qcnt++);
+			printf("Result Num: %d", RangeQueryResultSize);
+			CPURangeQueryResult* first = resultTable->next;
+			for(int tt=0;tt<=RangeQueryResultSize-1;tt++)
+			{
+				printf("[%d](%f,%f)\t",first->traid, first->x, first->y);
+				first = first->next;
+			}
+			printf("\n");
 		}
 
 		return 0;
