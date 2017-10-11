@@ -133,6 +133,7 @@ int writeCellsToFile(Grid *g,int* cellNo, int cellNum,string file)
 }
 
 //int Grid::rangeQuery(MBB & bound, int * ResultTraID, SamplePoint ** ResultTable,int* resultSetSize,int* resultTraLength)
+__attribute__((optimize("O0")))
 int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resultSetSize)
 {
 	sleep(1);
@@ -279,31 +280,62 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 				}
 
 			}
-			else
+			else// in mode==0, fetch dram, otherwise, fetch nvm
 			{
-				//printf("fetch NVM\n");
-				for (int j = 0; j <= ce.subTraNum - 1; j++)
-				{
-					int traid = ce.subTraTable[j].traID;
-					int startIdx = ce.subTraTable[j].startpID;
-					int endIdx = ce.subTraTable[j].endpID;
-					for (int k = startIdx; k <= endIdx; k++)
+				if(systemMode == 0){
+					for (int j = 0; j <= ce.subTraNum - 1; j++)
 					{
-						if (bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat))//该点在bound内
+						int traid = ce.subTraTable[j].traID;
+						int startIdx = ce.subTraTable[j].startpID;
+						int endIdx = ce.subTraTable[j].endpID;
+						for (int k = startIdx; k <= endIdx; k++)
 						{
-							newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
-							if (newResult == NULL)
-								return 2; //分配内存失败
-							newResult->traid = tradb[traid].points[k].tid;
-							newResult->x = tradb[traid].points[k].lon;
-							newResult->y = tradb[traid].points[k].lat;
-							newResult->next = NULL;
-							nowResult->next = newResult;
-							nowResult = newResult;
-							counter++;
+							bool isInMBR;
+							isInMBR = bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat);
+							if (isInMBR)//该点在bound内
+							{
+								newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
+								if (newResult == NULL)
+									return 2; //分配内存失败
+								newResult->traid = tradb[traid].points[k].tid;
+								newResult->x = tradb[traid].points[k].lon;
+								newResult->y = tradb[traid].points[k].lat;
+								newResult->next = NULL;
+								nowResult->next = newResult;
+								nowResult = newResult;
+								counter++;
+							}
 						}
 					}
 				}
+				else{
+					//printf("fetch NVM\n");
+					for (int j = 0; j <= ce.subTraNum - 1; j++)
+					{
+						int traid = ce.subTraTable[j].traID;
+						int startIdx = ce.subTraTable[j].startpID;
+						int endIdx = ce.subTraTable[j].endpID;
+						for (int k = startIdx; k <= endIdx; k++)
+						{
+							bool isInMBR;
+							NVM_R(isInMBR = bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat));
+							if (isInMBR)//该点在bound内
+							{
+								newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
+								if (newResult == NULL)
+									return 2; //分配内存失败
+								newResult->traid = tradb[traid].points[k].tid;
+								newResult->x = tradb[traid].points[k].lon;
+								newResult->y = tradb[traid].points[k].lat;
+								newResult->next = NULL;
+								nowResult->next = newResult;
+								nowResult = newResult;
+								counter++;
+							}
+						}
+					}
+				}
+
 			}
 
 
@@ -347,25 +379,51 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			}
 			else
 			{
-				//点在NVM内
-				//printf("fetch NVM\n");
-				for (int j = 0; j <= ce.subTraNum - 1; j++)
-				{
-					int traid = ce.subTraTable[j].traID;
-					int startIdx = ce.subTraTable[j].startpID;
-					int endIdx = ce.subTraTable[j].endpID;
-					for (int k = startIdx; k <= endIdx; k++)
+				if(systemMode == 0){
+					for (int j = 0; j <= ce.subTraNum - 1; j++)
 					{
-						newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
-						newResult->traid = tradb[traid].points[k].tid;
-						newResult->x = tradb[traid].points[k].lon;
-						newResult->y = tradb[traid].points[k].lat;
-						newResult->next = NULL;
-						nowResult->next = newResult;
-						nowResult = newResult;
-						counter++;
+						int traid = ce.subTraTable[j].traID;
+						int startIdx = ce.subTraTable[j].startpID;
+						int endIdx = ce.subTraTable[j].endpID;
+						for (int k = startIdx; k <= endIdx; k++)
+						{
+							bool isInMBR;
+							isInMBR = bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat);
+							newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
+							newResult->traid = tradb[traid].points[k].tid;
+							newResult->x = tradb[traid].points[k].lon;
+							newResult->y = tradb[traid].points[k].lat;
+							newResult->next = NULL;
+							nowResult->next = newResult;
+							nowResult = newResult;
+							counter++;
+						}
 					}
 				}
+				else{
+					//点在NVM内
+					//printf("fetch NVM\n");
+					for (int j = 0; j <= ce.subTraNum - 1; j++)
+					{
+						int traid = ce.subTraTable[j].traID;
+						int startIdx = ce.subTraTable[j].startpID;
+						int endIdx = ce.subTraTable[j].endpID;
+						for (int k = startIdx; k <= endIdx; k++)
+						{
+							bool isInMBR;
+							NVM_R(isInMBR = bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat));
+							newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
+							newResult->traid = tradb[traid].points[k].tid;
+							newResult->x = tradb[traid].points[k].lon;
+							newResult->y = tradb[traid].points[k].lat;
+							newResult->next = NULL;
+							nowResult->next = newResult;
+							nowResult = newResult;
+							counter++;
+						}
+					}
+				}
+
 			}
 
 		}

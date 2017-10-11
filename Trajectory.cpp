@@ -2,7 +2,7 @@
 
 
 extern float calculateDistance(float LatA,float LonA,float LatB,float LonB);
-
+extern int systemMode;
 
 Trajectory generateTrajectory(int tid,std::string vid)
 {
@@ -16,6 +16,7 @@ Trajectory generateTrajectory(int tid,std::string vid)
 
 //往轨迹里添加采样点
 //0:成功 1:超过最大数目 2:时间跨度太大，应计入下条轨迹 3:时间跨度不大，空间跨度太大，计算出来的速度大于180km/h~~50m/s，舍弃该点
+__attribute__((optimize("O0")))
 int addSamplePoints(Trajectory *traj, float lon,float lat,int time)
 {
     //length指向的就是当前的idx，length超过最大值，则失败，返回1
@@ -35,11 +36,20 @@ int addSamplePoints(Trajectory *traj, float lon,float lat,int time)
         }
     }
     //经过检查可以加入这点到轨迹中
-    traj->points[traj->length].lat = lat;
-    traj->points[traj->length].lon = lon;
-    traj->points[traj->length].tid = traj->tid;
-    traj->points[traj->length].time = time;
-    traj->length++;
+    if(systemMode==0){//in pure DRAM mode
+	    traj->points[traj->length].lat = lat;
+	    traj->points[traj->length].lon = lon;
+	    traj->points[traj->length].tid = traj->tid;
+	    traj->points[traj->length].time = time;
+	    traj->length++;
+    }
+    else{ //in pure SCM and hybrid mode
+	    NVM_W(traj->points[traj->length].lat = lat);
+	    NVM_W(traj->points[traj->length].lon = lon);
+	    NVM_W(traj->points[traj->length].tid = traj->tid);
+	    NVM_W(traj->points[traj->length].time = time);
+	    traj->length++;
+    }
     return 0;
 }
 
