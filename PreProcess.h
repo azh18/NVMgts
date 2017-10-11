@@ -2,6 +2,7 @@
 #define PREPROCESS_H
 #include<fstream>
 #include "ConstDefine.h"
+#include"Trajectory.h"
 using namespace std;
 
 typedef struct VLLT
@@ -24,8 +25,9 @@ class PreProcess
         ifstream fin;
         ofstream fout;
         int maxTid = 0; //当前最大的轨迹编号
+        Trajectory* tradb;
         PreProcess();
-        bool init(string fileName,string outFileName);
+        bool init(string fileName,string outFileName, Trajectory* tradb);
 		bool updateMapBound(float lon,float lat);
 		bool validPoint(float lon, float lat);
         virtual ~PreProcess();

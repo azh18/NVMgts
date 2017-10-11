@@ -14,12 +14,11 @@
 
 extern int DaysBetween2Date(string date1, string date2);
 //轨迹编号从1开始
-extern Trajectory* tradb;
+//extern Trajectory* tradb;
 extern int tradbNVMID;
 extern map<string, tidLinkTable*> vidTotid;
 extern map<string, tidLinkTable*>::iterator iter;
 extern string baseDate;
-
 
 PreProcess::PreProcess()
 {
@@ -44,7 +43,7 @@ void split(std::string& s, const std::string& delim,std::vector< std::string >* 
 
 
 
-bool PreProcess::init(string fileName,string outFileName)
+bool PreProcess::init(string fileName,string outFileName,Trajectory* tradb)
 {
 	xmin = 180;
 	xmax = 0;
@@ -52,6 +51,7 @@ bool PreProcess::init(string fileName,string outFileName)
 	ymax = 0;
 	fin.open(fileName,ios_base::in);
 	fout.open(outFileName,ios_base::out);
+	this->tradb = tradb;
 
 	string buffer;
 	buffer.assign(istreambuf_iterator<char>(fin),istreambuf_iterator<char>());

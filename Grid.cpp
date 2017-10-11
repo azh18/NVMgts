@@ -2,6 +2,7 @@
 
 
 extern Trajectory* tradb;
+extern int systemMode;
 
 Grid::Grid()
 {
@@ -247,7 +248,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 		{
 			int cellID = candidatesCellID[i];
 			Cell &ce = g->cellPtr[candidatesCellID[i]];
-			if(g->buffer.getKey(cellID,&ce,tradb))
+			if((systemMode==1)&&(g->buffer.getKey(cellID,&ce,tradb)))
 			{
 				printf("fetch DRAM\n");
 				//点在DRAM内
@@ -313,7 +314,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 		{
 			Cell &ce = g->cellPtr[directResultsCellID[i]];
 			int cellID = directResultsCellID[i];
-			if(g->buffer.getKey(cellID,&ce,tradb))
+			if((systemMode==1)&&(g->buffer.getKey(cellID,&ce,tradb)))
 			{
 				//点在DRAM内
 				printf("fetch DRAM\n");

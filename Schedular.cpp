@@ -2,13 +2,17 @@
 #include <string>
 #include <fstream>
 
+extern int systemMode;
 
 //Queue:
 int initMyQueue(myQueue *q, int nCount)
 {
 	q->m_nCount = nCount;
 	//q->m_pData = new TYPE[nCount];//注意这里不是小括号，小扩号是调用构造函数
-	q->m_pData = (TYPE*)p_malloc(6, sizeof(TYPE)*nCount);
+	if(systemMode==0)
+		q->m_pData = (TYPE*)malloc(sizeof(TYPE)*nCount);
+	else
+		q->m_pData = (TYPE*)p_malloc(6, sizeof(TYPE)*nCount);
 	q->m_nHead = q->m_nTail = 0;
 	return 0;
 }
@@ -105,6 +109,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 	}
 	else
 		//处理队头，然后再正式接下来的处理
+		// only work on the NVM mode or hybrid mode
 	{
 		//schedular has been initialed, recover from nvm
 		//remember to add the base addr
@@ -237,7 +242,10 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 int initSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 {
 	//sche->jobsBuffQueue = (myQueue*)malloc(sizeof(myQueue));
-	sche->jobsBuffQueue = (myQueue*)p_malloc(5, sizeof(myQueue));
+	if(systemMode == 0)
+		sche->jobsBuffQueue = (myQueue*)malloc(sizeof(myQueue));
+	else
+		sche->jobsBuffQueue = (myQueue*)p_malloc(5, sizeof(myQueue));
 	initMyQueue(sche->jobsBuffQueue,MAXJOBSNUM);
 	sche->gridIndex = gridIndex;
 	sche->DB = DB;

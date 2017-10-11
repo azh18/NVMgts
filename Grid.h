@@ -11,7 +11,7 @@
 #include<vector>
 #include "BufferManager.h"
 
-extern Trajectory* tradb;
+
 
 class Grid{
 public:

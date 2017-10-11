@@ -33,6 +33,8 @@ typedef struct SysInfo
 
 //global
 Trajectory* tradb=NULL;
+Trajectory* tradbDRAM = NULL;//DRAM中的tradb的指针
+Trajectory* tradbSCM = NULL; //NVM中的tradb的指针
 int tradbNVMID = -1;
 string baseDate = "2014-07-01";
 SysInfo *sysInfo=NULL;
@@ -41,6 +43,7 @@ Schedular *sche = NULL;
 // 系统模式，DRAM&SCM
 //0:纯DRAM
 //1:SCM-DRAM
+//2:纯SCM
 int systemMode = 1;
 
 
@@ -134,9 +137,14 @@ int main(int argc, char **argv)
 		p_init(20*1024*1024);
 		printf("[init] System is now at SCM-DRAM mode.\n");
 	}
-	else
+	else if (systemMode == 0)
 	{
 		printf("[init] System is now at pure DRAM mode.\n");
+	}
+	else
+	{
+		p_init(20*1024*1024);
+		printf("[init] System is now at pure SCM mode.\n");
 	}
 
 	if(argc == 3 && argv[1][0]== 'm' && argv[2][0] == 'd')
@@ -151,15 +159,27 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if(argc == 3 && argv[1][0] == 'm' && argv[2][0] == 's')
+	if(argc == 3 && argv[1][0] == 'm' && argv[2][0] == 'h')
 	{
 		FILE *systemState = fopen("config.ini","w+");
-		if(systemMode == 1)
+		if(systemMode >= 1)
 			int ret = cleanData();
 		systemMode = 1;
 		fputc('1',systemState);
 		fclose(systemState);
 		printf("Switched to SCM-DRAM mode.\nPlease restart NVM_GTS\n");
+		return 0;
+	}
+
+	if(argc == 3 && argv[1][0] == 'm' && argv[2][0] == 's')
+	{
+		FILE *systemState = fopen("config.ini","w+");
+		if(systemMode >= 1)
+			int ret = cleanData();
+		systemMode = 2;
+		fputc('2',systemState);
+		fclose(systemState);
+		printf("Switched to pure SCM mode.\nPlease restart NVM_GTS\n");
 		return 0;
 	}
 
@@ -184,6 +204,18 @@ int main(int argc, char **argv)
 	*/
 	if(systemMode == 0) //纯内存模式
 	{
+		printf("Allocating DRAM...\n");
+		tradbDRAM = (Trajectory*)malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
+		printf("Loading Data...\n");
+		PreProcess pp;
+		pp.init("data_SSmall_SH.txt", "dataout.txt",tradbDRAM);
+		tradb = tradbDRAM;
+		sysInfo = (SysInfo*)malloc(sizeof(SysInfo));
+		sysInfo->xmin = pp.xmin;
+		sysInfo->xmax = pp.xmax;
+		sysInfo->ymin = pp.ymin;
+		sysInfo->ymax = pp.ymax;
+		sysInfo->maxTid = pp.maxTid;
 	}
 	else //混合内存模式
 	{
@@ -197,13 +229,12 @@ int main(int argc, char **argv)
 			//p_bind(1,stateData,sizeof(int));
 			(*stateData) = 1; //build the stateData but not load in data
 			printf("Allocating NVM...\n");
-			tradb = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
-			memset(tradb,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
-			printf("malloc:%p\n",tradb);
+			tradbSCM = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
+			printf("malloc:%p\n",tradbSCM);
 			printf("Loading Data...\n");
 			(*stateData) = 2; //NVM allocated
 			PreProcess pp;
-			pp.init("data_SSmall_SH.txt", "dataout.txt");
+			pp.init("data_SSmall_SH.txt", "dataout.txt",tradbSCM);
 			sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
 			sysInfo->xmin = pp.xmin;
 			sysInfo->xmax = pp.xmax;
@@ -222,16 +253,16 @@ int main(int argc, char **argv)
 			{
 				// malloc and load data again
 				printf("Data not loaded, Loading Data2...\n");
-				tradb = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
-				memset(tradb,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
-				printf("malloc: %p\n", tradb);
+				tradbSCM = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
+				memset(tradbSCM,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
+				printf("malloc: %p\n", tradbSCM);
 				if(tradb == NULL)
 				{
 					printf("error allocate traDB\n");
 				}
 				(*stateData) = 2; //NVM allocated
 				PreProcess pp;
-				pp.init("data_SSmall_SH.txt", "dataout.txt");
+				pp.init("data_SSmall_SH.txt", "dataout.txt",tradbSCM);
 				sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
 				sysInfo->xmin = pp.xmin;
 				sysInfo->xmax = pp.xmax;
@@ -245,9 +276,9 @@ int main(int argc, char **argv)
 			{
 				// load data again
 				printf("Data not loaded, Loading Data3...\n");
-				tradb = (Trajectory*)p_get_malloc(2);
+				tradbSCM= (Trajectory*)p_get_malloc(2);
 				PreProcess pp;
-				pp.init("data_SSmall_SH.txt", "dataout.txt");
+				pp.init("data_SSmall_SH.txt", "dataout.txt",tradbSCM);
 				sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
 				sysInfo->xmin = pp.xmin;
 				sysInfo->xmax = pp.xmax;
@@ -261,12 +292,13 @@ int main(int argc, char **argv)
 			{
 				// stateData>=3, load finished, only need bind and query
 				printf("Data loaded, Recovering Data4...\n");
-				tradb = (Trajectory*)p_get_malloc(2);
+				tradbSCM = (Trajectory*)p_get_malloc(2);
 				sysInfo = (SysInfo*)p_get_malloc(3);
-				printf("location:%f,%f;time:%d;Tid:%d\n",tradb[3].points[2].lat,tradb[3].points[2].lon,tradb[3].points[2].time,tradb[3].points[2].tid);
+				printf("location:%f,%f;time:%d;Tid:%d\n",tradbSCM[3].points[2].lat,tradbSCM[3].points[2].lon,tradbSCM[3].points[2].time,tradbSCM[3].points[2].tid);
 			}
 
 		}
+		tradb = tradbSCM;
 	}
 	/*
 	Build Grid Index...
@@ -326,22 +358,29 @@ int main(int argc, char **argv)
 		Load Schedular... If system is down, restart after data and index are all fine
 		-----------------------------------------------------------------------------------
 		*/
-
-		if(*stateData==3)
-		{
-			//stateData==3 means we have not build a schedular, haven't run
-			sche = (Schedular*)p_malloc(4, sizeof(Schedular));
-			*stateData = 4;
+		if(systemMode==0){
+			sche = (Schedular*)malloc(sizeof(Schedular));
 			sche->lastCompletedJob = -1;
 			cout << "begin running schedular..." << endl;
 			runSchedular(sche,g,tradb);
 		}
-		else
-		{
-			//stateData>=4 means schedular has been in NVM
-			sche = (Schedular*)p_get_malloc(4);
-			cout << "begin continuing schedular..." << endl;
-			runSchedular(sche,g,tradb);
+		else{
+			if(*stateData==3)
+			{
+				//stateData==3 means we have not build a schedular, haven't run
+				sche = (Schedular*)p_malloc(4, sizeof(Schedular));
+				*stateData = 4;
+				sche->lastCompletedJob = -1;
+				cout << "begin running schedular..." << endl;
+				runSchedular(sche,g,tradb);
+			}
+			else
+			{
+				//stateData>=4 means schedular has been in NVM
+				sche = (Schedular*)p_get_malloc(4);
+				cout << "begin continuing schedular..." << endl;
+				runSchedular(sche,g,tradb);
+			}
 		}
 	}
 //    Schedular schedular;
