@@ -49,8 +49,10 @@ NVMgts is a kind of fast-recoverable hybrid-memory trajectory storage system. It
 
 ### batch queries through file ###
 first point out the file in main.cpp
+
 then type `./test f`
 
 ### single query through input ###
 first type `./test s`
+
 then input `RQ(lon1,lon2,lat1,lat2)`
