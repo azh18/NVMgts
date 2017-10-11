@@ -70,7 +70,6 @@ int cleanData()
 
 		printf("Cleaning Data2...\n");
 		stateData = (int*)p_get_malloc(1);
-		p_clear();
 		//p_free(stateData);
 
 		sche = (Schedular*)p_get_malloc(4);
