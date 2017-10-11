@@ -1,6 +1,6 @@
 #pragma once
-#define MAX_TRAJ_SIZE 1000
-#define MAXLENGTH 512
+#define MAX_TRAJ_SIZE 20000
+#define MAXLENGTH 256
 //MAXGAP是最大轨迹内时间间隔，如果超过这个间隔应该被视为两条轨迹
 #define MAXGAP 3600
 

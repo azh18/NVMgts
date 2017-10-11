@@ -70,6 +70,7 @@ int cleanData()
 
 		printf("Cleaning Data2...\n");
 		stateData = (int*)p_get_malloc(1);
+		p_clear();
 		//p_free(stateData);
 
 		sche = (Schedular*)p_get_malloc(4);
@@ -134,7 +135,7 @@ int main(int argc, char **argv)
 	}
 	if(systemMode == 1)
 	{
-		p_init(20*1024*1024);
+		p_init(200*1024*1024);
 		printf("[init] System is now at SCM-DRAM mode.\n");
 	}
 	else if (systemMode == 0)
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		p_init(20*1024*1024);
+		p_init(200*1024*1024);
 		printf("[init] System is now at pure SCM mode.\n");
 	}
 
@@ -202,13 +203,14 @@ int main(int argc, char **argv)
 	If system is down, recover the pointer from NVM
 	-----------------------------------------------------------------------------------
 	*/
+	string filename = "SH_4_3.txt";
 	if(systemMode == 0) //纯内存模式
 	{
 		printf("Allocating DRAM...\n");
 		tradbDRAM = (Trajectory*)malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
 		printf("Loading Data...\n");
 		PreProcess pp;
-		pp.init("data_SSmall_SH.txt", "dataout.txt",tradbDRAM);
+		pp.init(filename, "dataout.txt",tradbDRAM);
 		tradb = tradbDRAM;
 		sysInfo = (SysInfo*)malloc(sizeof(SysInfo));
 		sysInfo->xmin = pp.xmin;
@@ -230,11 +232,12 @@ int main(int argc, char **argv)
 			(*stateData) = 1; //build the stateData but not load in data
 			printf("Allocating NVM...\n");
 			tradbSCM = (Trajectory*)p_malloc(2, sizeof(Trajectory)*MAX_TRAJ_SIZE);
+			memset(tradbSCM,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
 			printf("malloc:%p\n",tradbSCM);
 			printf("Loading Data...\n");
 			(*stateData) = 2; //NVM allocated
 			PreProcess pp;
-			pp.init("data_SSmall_SH.txt", "dataout.txt",tradbSCM);
+			pp.init(filename, "dataout.txt",tradbSCM);
 			sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
 			sysInfo->xmin = pp.xmin;
 			sysInfo->xmax = pp.xmax;
@@ -262,7 +265,7 @@ int main(int argc, char **argv)
 				}
 				(*stateData) = 2; //NVM allocated
 				PreProcess pp;
-				pp.init("data_SSmall_SH.txt", "dataout.txt",tradbSCM);
+				pp.init(filename, "dataout.txt",tradbSCM);
 				sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
 				sysInfo->xmin = pp.xmin;
 				sysInfo->xmax = pp.xmax;
@@ -277,8 +280,9 @@ int main(int argc, char **argv)
 				// load data again
 				printf("Data not loaded, Loading Data3...\n");
 				tradbSCM= (Trajectory*)p_get_malloc(2);
+				memset(tradbSCM,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
 				PreProcess pp;
-				pp.init("data_SSmall_SH.txt", "dataout.txt",tradbSCM);
+				pp.init(filename, "dataout.txt",tradbSCM);
 				sysInfo = (SysInfo*)p_malloc(3, sizeof(SysInfo));
 				sysInfo->xmin = pp.xmin;
 				sysInfo->xmax = pp.xmax;

@@ -88,7 +88,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 		while(!in.eof())
 		{
 			in.getline(queryStr,1024);
-			printf("%s",queryStr);
+			//printf("%s",queryStr);
 			if(queryStr[0] == '\0')
 				break;
 			// generate job
@@ -130,7 +130,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 				while(!in.eof())
 				{
 					in.getline(queryStr,1024);
-					printf("%s",queryStr);
+					//printf("%s",queryStr);
 					if(queryStr[0] == '\0')
 						break;
 					// generate job

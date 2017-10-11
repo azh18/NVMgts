@@ -3,6 +3,8 @@
 BufferManager::BufferManager()
 {
 	//ctor
+	this->head = NULL;
+	this->tail = NULL;
 }
 
 subTraBuffer::subTraBuffer(){

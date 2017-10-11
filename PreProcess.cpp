@@ -98,7 +98,7 @@ bool PreProcess::init(string fileName,string outFileName,Trajectory* tradb)
 			tidNode->tid = nowTid;
 			tidNode->next = NULL;
 			vidTotid.insert(pair<string,tidLinkTable*>(vllt.vid,tidNode));
-			printf("access: %p\n", tradb);
+			//printf("access: %p\n", tradb);
 			//tradb[nowTid].vid = vllt.vid;
 			memcpy(tradb[nowTid].vid,vllt.vid.c_str(),vllt.vid.length());
 			tradb[nowTid].tid = nowTid;
