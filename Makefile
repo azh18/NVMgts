@@ -11,7 +11,7 @@ PROGRAM = test
 INCDIR= .
 #
 # Define the C compile flags
-CCFLAGS = -g -m64 -I ./header -std=c++11
+CCFLAGS =  -O2 -m64 -I ./header -std=c++11
 CC = g++
 
 

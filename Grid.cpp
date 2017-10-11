@@ -30,7 +30,7 @@ int initGrid(Grid *g,const MBB& mbb,float val_cell_size)
 		}
 	}
 	g->buffer.cellFetchTime.resize(g->cellnum,0);
-	g->buffer.maxCellInDRAM = 1000;
+	g->buffer.maxCellInDRAM = 50000;
 	g->buffer.thresReadTime = 3;
 	return 0;
 }
@@ -136,7 +136,7 @@ int writeCellsToFile(Grid *g,int* cellNo, int cellNum,string file)
 __attribute__((optimize("O0")))
 int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resultSetSize)
 {
-	sleep(1);
+	//sleep(1);
 	//这部分要移植到gpu上，尽量用底层函数写
 	//为了可比较，在这个函数内仅仅要求把轨迹查出来就行了，result的组织交由QueryResult类来做
 	//判断range是否超出地图
@@ -245,23 +245,28 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 
 		//对所有candidateCell检测，可并行
 		counter = 0;
+		//debug
+		int instruCnt = 0;
+		//debug
 		for (int i = 0; i <= candidateSize - 1; i++)
 		{
 			int cellID = candidatesCellID[i];
 			Cell &ce = g->cellPtr[candidatesCellID[i]];
 			if((systemMode==1)&&(g->buffer.getKey(cellID,&ce,tradb)))
 			{
-				printf("fetch DRAM\n");
+				//printf("fetch DRAM\n");
 				//点在DRAM内
+
 				for(int j=0; j<=ce.subTraNum-1; j++)
 				{
-					for(int k=0; k<=g->buffer.bufferData[cellID].subTraData[j].length-1; k++)
+					subTraBuffer temps = g->buffer.bufferData[cellID].subTraData[j];
+					for(int k=0; k<=temps.length-1; k++)
 					{
-						SamplePoint p;
-						p.lat = g->buffer.bufferData[cellID].subTraData[j].points[k].lat;
-						p.lon = g->buffer.bufferData[cellID].subTraData[j].points[k].lon;
-						p.tid = g->buffer.bufferData[cellID].subTraData[j].points[k].tid;
-						p.time = g->buffer.bufferData[cellID].subTraData[j].points[k].time;
+						SamplePoint p = temps.points[k];
+						//p.lat = temps.points[k].lat;
+						//p.lon = temps.points[k].lon;
+						//p.tid = temps.points[k].tid;
+						//p.time = g->buffer.bufferData[cellID].subTraData[j].points[k].time;
 
 						if (bound.pInBox(p.lon, p.lat))//该点在bound内
 						{
@@ -324,9 +329,9 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 								newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
 								if (newResult == NULL)
 									return 2; //分配内存失败
-								newResult->traid = tradb[traid].points[k].tid;
-								newResult->x = tradb[traid].points[k].lon;
-								newResult->y = tradb[traid].points[k].lat;
+								NVM_R(newResult->traid = tradb[traid].points[k].tid);
+								NVM_R(newResult->x = tradb[traid].points[k].lon);
+								NVM_R(newResult->y = tradb[traid].points[k].lat);
 								newResult->next = NULL;
 								nowResult->next = newResult;
 								nowResult = newResult;
@@ -349,17 +354,18 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 			if((systemMode==1)&&(g->buffer.getKey(cellID,&ce,tradb)))
 			{
 				//点在DRAM内
-				printf("fetch DRAM\n");
+				//printf("fetch DRAM\n");
 				for(int j=0; j<=ce.subTraNum-1; j++)
 				{
+					subTraBuffer temps = g->buffer.bufferData[cellID].subTraData[j];
 					// printf("cell %d in DRAM: ",g->buffer.bufferData[cellID].cellID);
-					for(int k=0; k<=g->buffer.bufferData[cellID].subTraData[j].length-1; k++)
+					for(int k=0; k<=temps.length-1; k++)
 					{
 						SamplePoint p;
-						p.lat = g->buffer.bufferData[cellID].subTraData[j].points[k].lat;
-						p.lon = g->buffer.bufferData[cellID].subTraData[j].points[k].lon;
-						p.tid = g->buffer.bufferData[cellID].subTraData[j].points[k].tid;
-						p.time = g->buffer.bufferData[cellID].subTraData[j].points[k].time;
+						p.lat = temps.points[k].lat;
+						p.lon = temps.points[k].lon;
+						p.tid = temps.points[k].tid;
+						//p.time = temps.points[k].time;
 
 						if (bound.pInBox(p.lon, p.lat))//该点在bound内
 						{
@@ -413,9 +419,9 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 							bool isInMBR;
 							NVM_R(isInMBR = bound.pInBox(tradb[traid].points[k].lon, tradb[traid].points[k].lat));
 							newResult = (CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
-							newResult->traid = tradb[traid].points[k].tid;
-							newResult->x = tradb[traid].points[k].lon;
-							newResult->y = tradb[traid].points[k].lat;
+							NVM_R(newResult->traid = tradb[traid].points[k].tid);
+							NVM_R(newResult->x = tradb[traid].points[k].lon);
+							NVM_R(newResult->y = tradb[traid].points[k].lat);
 							newResult->next = NULL;
 							nowResult->next = newResult;
 							nowResult = newResult;
@@ -430,6 +436,7 @@ int rangeQuery(Grid *g,MBB & bound, CPURangeQueryResult * ResultTable, int* resu
 
 
 		(*resultSetSize) = counter;
+		printf("resultSize: %d",counter);
 		//输出结果
 		//CPURangeQueryResult* pNow = ResultTable;
 //		while (pNow->next != NULL) {

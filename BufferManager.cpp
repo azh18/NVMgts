@@ -89,9 +89,11 @@ int BufferManager::getKey(int key, Cell *ce, Trajectory* db){
                         int traID = ce->subTraTable[subT].traID;
                         sub.subTraID = traID;
                         temp->subTraData.push_back(sub);
+                        int cntLen = 0;
 			for(int idx = ce->subTraTable[subT].startpID;idx<=ce->subTraTable[subT].endpID;idx++)
 			{
-                                temp->subTraData[temp->subTraData.size()-1].points.push_back(db[traID].points[idx]);
+                                temp->subTraData[temp->subTraData.size()-1].points.push_back(db[traID].points[idx]); //subtraData 为vector时
+                                //temp->subTraData[temp->subTraData.size()-1].points[cntLen++] = db[traID].points[idx]; //subtraData为静态数组时
 			}
 		}
 		return 1; //在DRAM内

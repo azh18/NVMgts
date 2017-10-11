@@ -99,9 +99,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 			newJob.queryMBR.xmax = atof(strtok(NULL, ","));
 			newJob.queryMBR.ymin = atof(strtok(NULL, ","));
 			newJob.queryMBR.ymax = atof(strtok(NULL, ","));
-			newJob.queryTime = time(NULL);
-			newJob.queryTimeClock = clock();
-			//sche->jobsBuffQueue->push(newJob);
+			gettimeofday(&newJob.queryTime,NULL);
 			push(sche->jobsBuffQueue,newJob);
 		}
 		in.close();
@@ -141,8 +139,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 					newJob.queryMBR.xmax = atof(strtok(NULL, ","));
 					newJob.queryMBR.ymin = atof(strtok(NULL, ","));
 					newJob.queryMBR.ymax = atof(strtok(NULL, ","));
-					newJob.queryTime = time(NULL);
-					newJob.queryTimeClock = clock();
+					gettimeofday(&newJob.queryTime,NULL);
 					//sche->jobsBuffQueue->push(newJob);
 					push(sche->jobsBuffQueue,newJob);
 				}
@@ -155,23 +152,13 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 		}
 		if((pJob->commited == false) && (pJob->completed == true))
 		{
-			//sche->writeResult();
+			executeQueryInSchedular(sche);
 			writeResult(sche);
 			// 只有任务提交才算完成
-			pJob->completeTime = time(NULL);
-			pJob->completeTimeClock = clock();
-			// 如果相差大于5s，说明重启过，用普通计时法就可以
-			if(difftime(pJob->completeTime,pJob->queryTime)>5)
-			{
-				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-				printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-			}
-			// 如果相差小于5s，说明可能可以用clock精确计时
-			else
-			{
-				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-				printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-			}
+			gettimeofday(&pJob->finishTime,NULL);
+			double diff = 1000000*(pJob->finishTime.tv_sec-pJob->queryTime.tv_sec) + pJob->finishTime.tv_usec - pJob->queryTime.tv_usec;
+			fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,diff/1000000);
+			printf("Query %d use time %f s\n",pJob->jobID,diff/1000000);
 			fflush(sche->fp);
 			pJob->commited = true;
 			pop(sche->jobsBuffQueue);
@@ -181,20 +168,10 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 			executeQueryInSchedular(sche);
 			writeResult(sche);
 			pJob->completed = true;
-			pJob->completeTime = time(NULL);
-			pJob->completeTimeClock = clock();
-			// 如果相差大于5s，说明重启过，用普通计时法就可以
-			if(difftime(pJob->completeTime,pJob->queryTime)>5)
-			{
-				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-				printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-			}
-			// 如果相差小于5s，说明可能可以用clock精确计时
-			else
-			{
-				fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-				printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-			}
+			gettimeofday(&pJob->finishTime,NULL);
+			double diff = 1000000*(pJob->finishTime.tv_sec-pJob->queryTime.tv_sec) + pJob->finishTime.tv_usec - pJob->queryTime.tv_usec;
+			fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,diff/1000000);
+			printf("Query %d use time %f s\n",pJob->jobID,diff/1000000);
 			fflush(sche->fp);
 			pJob->commited = true;
 			pop(sche->jobsBuffQueue);
@@ -211,20 +188,10 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 		executeQueryInSchedular(sche);
 		pJob->completed = true;
 		writeResult(sche);
-		pJob->completeTime = time(NULL);
-		pJob->completeTimeClock = clock();
-		// 如果相差大于5s，说明重启过，用普通计时法就可以
-		if(difftime(pJob->completeTime,pJob->queryTime)>5)
-		{
-			fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-			printf("Query %d use time %f s\n",pJob->jobID,difftime(pJob->completeTime,pJob->queryTime));
-		}
-		// 如果相差小于5s，说明可能可以用clock精确计时
-		else
-		{
-			fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-			printf("Query %d use time %f s\n",pJob->jobID,double(pJob->completeTimeClock-pJob->queryTimeClock)/1000);
-		}
+		gettimeofday(&pJob->finishTime,NULL);
+		double diff = 1000000*(pJob->finishTime.tv_sec-pJob->queryTime.tv_sec) + pJob->finishTime.tv_usec - pJob->queryTime.tv_usec;
+		fprintf(sche->fp,"Query %d use time %f s\n",pJob->jobID,diff/1000000);
+		printf("Query %d use time %f s\n",pJob->jobID,diff/1000000);
 		fflush(sche->fp);
 		pJob->commited = true;
 		pop(sche->jobsBuffQueue);

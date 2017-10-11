@@ -207,6 +207,7 @@ int main(int argc, char **argv)
 	{
 		printf("Allocating DRAM...\n");
 		tradbDRAM = (Trajectory*)malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
+		memset(tradbDRAM,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
 		printf("Loading Data...\n");
 		PreProcess pp;
 		pp.init(filename, "dataout.txt",tradbDRAM);

@@ -10,13 +10,14 @@
 
 #include <stdio.h>
 #include <string>
+#include <sys/time.h>
 extern "C"{
 #include "p_mmap.h"
 }
 
 //test:以cell为基础存储
 #define _CELL_BASED_STORAGE
-#define NVM_R(x) for(int accnt=0;accnt<=2;accnt++){x;} //模拟NVM read latency
+#define NVM_R(x) for(volatile int accnt=0;accnt<=5;accnt++){x;} //模拟NVM read latency
 #define NVM_W(x) for(int accnt=0;accnt<=2;accnt++){x;} //模拟NVM write latency
 //test:Similarity query based on naive grid，以定大小的grid来索引
 //#define _SIMILARITY

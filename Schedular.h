@@ -15,10 +15,8 @@ typedef struct Job{
     bool commited=false;
     CPURangeQueryResult *resultData=NULL;
     int resultNum=0;
-    time_t queryTime;
-    time_t completeTime;
-    clock_t queryTimeClock;
-    clock_t completeTimeClock;
+    struct timeval queryTime;
+    struct timeval finishTime;
 }Job;
 
 typedef Job TYPE;
