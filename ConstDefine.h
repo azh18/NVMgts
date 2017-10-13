@@ -10,6 +10,13 @@
 
 #include <stdio.h>
 #include <string>
+#include <sys/shm.h> // symphony header
+#include <sys/socket.h> //socket header
+#include <sys/sem.h>
+#include <sys/types.h>
+#define SMTYPE_NUM 7
+#define SOCKETTYPE_NUM 7
+#define SERVER_PORT 4081 // port no
 #include <sys/time.h>
 extern "C"{
 #include "p_mmap.h"
@@ -35,5 +42,20 @@ typedef struct SPoint {
 	uint32_t tID;
 }SPoint;
 
+typedef struct SMDATA
+{
+    double dataDou[4];
+    int type;
+    char stringData[10000];
+    bool flag[3];
+    int dataInt[4];
+} SMDATA;
+
+union semun
+{
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;
+};
 
 

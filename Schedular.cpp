@@ -4,6 +4,15 @@
 
 extern int systemMode;
 
+
+extern void* shm[SMTYPE_NUM];
+extern SMDATA *shared[SMTYPE_NUM];
+extern int shmid[SMTYPE_NUM];
+extern int semid[SMTYPE_NUM];
+extern int nowState;// 0-7 is real state; -1 is not do anything..
+extern int sem_p(int semid);
+extern int sem_v(int semid);
+
 //Queue:
 int initMyQueue(myQueue *q, int nCount)
 {
@@ -111,7 +120,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 	{
 		//schedular has been initialed, recover from nvm
 		//remember to add the base addr
-		char *baseAddr = (char*)p_get_base();
+		// char *baseAddr = (char*)p_get_base();
 		sche->jobsBuffQueue = (myQueue*)p_get_malloc(5);
 		sche->jobsBuffQueue->m_pData = (TYPE*)p_get_malloc(6);
 		sche->fp = fopen("Performance.txt","a+");
@@ -197,6 +206,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 		pop(sche->jobsBuffQueue);
 	}
 	fclose(sche->fp);
+	return 0;
 }
 
 //int Schedular::run(Grid *gridIndex, Trajectory *DB)
@@ -287,11 +297,12 @@ int writeResult(Schedular *sche)
 //
 bool destroySchedular(Schedular *sche)
 {
-	myQueue* tempQueue = sche->jobsBuffQueue;
+	//myQueue* tempQueue = sche->jobsBuffQueue;
 	p_free(6);
 	p_free(5);
 	p_free(4);
 	(*stateData) = 3;
+	return true;
 }
 
 //
