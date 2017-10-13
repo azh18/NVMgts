@@ -59,7 +59,8 @@ SMDATA *shared[SMTYPE_NUM] = {NULL};
 int shmid[SMTYPE_NUM];
 int semid[SMTYPE_NUM];
 int nowState = -1;// 0-7 is real state; -1 is not do anything..
-
+int numTrajs=0,numPoints=0; // how many T and P system has now
+int nowQueryID = -1;
 
 
 /*
@@ -161,6 +162,25 @@ int main(int argc, char **argv)
     {
         p_init(200*1024*1024);
         printf("[init] System is now at pure SCM mode.\n");
+    }
+
+    // initial SM and semaphore
+    for(int i=0; i<SMTYPE_NUM; i++)
+    {
+        shmid[i] = shmget((key_t)i,sizeof(SMDATA),0666|IPC_CREAT);
+        if(shmid[i] == -1)
+        {
+            // fail
+            printf("failed to create shared memory :%d",shmid[i]);
+        }
+        shm[i] = shmat(shmid[i],0,0);
+        if(shm[i]==(void*)-1)
+        {
+            printf("shmat err\n");
+        }
+        shared[i] = (SMDATA*)shm[i];
+        // initial semaphore
+        semid[i] = creat_sem((key_t)i);
     }
 
 //------------------------------------------------------------------------------------
@@ -354,6 +374,11 @@ int main(int argc, char **argv)
         //int temp[7] = { 553,554,555,556,557,558,559 };
         //int sizetemp = 7;
         //g->writeCellsToFile(temp, sizetemp, "111.txt");
+        numTrajs = sysInfo->maxTid;
+        numPoints = g->totalPointNum;
+        // output new system status
+        //.......
+        // output new system status
         cout << "Building index successful"<<endl;
     }
 
@@ -515,6 +540,7 @@ int sem_v(int semid)
         printf("%s : can't do the sem_v!\n",__func__);
         return -1;
     }
+
     return 0;
 }
 
@@ -527,3 +553,51 @@ int del_sem(int semid)
     }
     return 0;
 }
+
+int renewSystemState(int trajN, int pointN, int queryIDRunning, int runningType)
+{
+    numTrajs = trajN;
+    numPoints = pointN;
+    nowState = runningType;
+    nowQueryID = queryIDRunning;
+    if(sem_p(semid[4]))
+    {
+        printf("sem_p fail.\n");
+    }
+    shared[4]->dataInt[0] = numTrajs;
+    shared[4]->dataInt[1] = numPoints;
+    shared[4]->dataInt[2] = nowQueryID;
+    shared[4]->dataInt[3] = nowState;
+    shared[4]->flag[0] = true;
+    switch(systemMode)
+    {
+        case 0:
+        {
+            shared[4]->stringData[0] = 'd';
+            break;
+        }
+        case 1:
+        {
+            shared[4]->stringData[0] = 'h';
+            break;
+        }
+        case 2:
+        {
+            shared[4]->stringData[0] = 's';
+            break;
+        }
+        default:
+        {
+            shared[4]->stringData[0] = 'n'; //unknown
+            break;
+        }
+    }
+    if(sem_v(semid[4]))
+    {
+        printf("sem_v fail.\n");
+    }
+    return 0;
+}
+
+// updateSM(SMDATA smdata, )
+// It is meaningless to write a unified function to update SM because it does not simplify the code.

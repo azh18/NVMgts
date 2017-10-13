@@ -12,6 +12,7 @@ extern int semid[SMTYPE_NUM];
 extern int nowState;// 0-7 is real state; -1 is not do anything..
 extern int sem_p(int semid);
 extern int sem_v(int semid);
+extern int renewSystemState(int trajN, int pointN, int queryIDRunning, int runningType);
 
 //Queue:
 int initMyQueue(myQueue *q, int nCount)
