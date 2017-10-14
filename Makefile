@@ -6,12 +6,12 @@ UTILITYLOC =
 
 NEWMOD =
 
-PROGRAM = test
+PROGRAM = testGTS
 
 INCDIR= .
 #
 # Define the C compile flags
-CCFLAGS =  -O2 -m64 -I ./header -std=c++11
+CCFLAGS =  -g -m64 -I ./header -std=c++11
 CC = g++
 
 
@@ -36,15 +36,15 @@ OBJECTS = \
 # Define Task Function Program
 
 
-all: test
+all: testGTS
 
 
 # Define what Modtools is
 
 
-test: $(OBJECTS)
+testGTS: $(OBJECTS)
 	gcc -m64 -c -g p_mmap.c -o p_mmap.o
-	$(CC) $(CCFLAGS) -o test  p_mmap.o $(OBJECTS)
+	$(CC) $(CCFLAGS) -o testGTS  p_mmap.o $(OBJECTS)
 
 # Modtools_Object codes
 

@@ -14,8 +14,8 @@
 #include <sys/socket.h> //socket header
 #include <sys/sem.h>
 #include <sys/types.h>
-#define SMTYPE_NUM 7
-#define SOCKETTYPE_NUM 7
+#define SMTYPE_NUM 8
+#define SOCKETTYPE_NUM 8
 #define SERVER_PORT 4081 // port no
 #include <sys/time.h>
 extern "C"{
