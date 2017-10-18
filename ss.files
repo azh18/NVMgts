@@ -5,6 +5,7 @@ Cell.cpp
 Cell.h
 ConstDefine.h
 DateTime.cpp
+GTS.cpp
 Grid.cpp
 Grid.h
 MBB.cpp
@@ -20,5 +21,6 @@ Schedular.h
 Trajectory.cpp
 Trajectory.h
 main.cpp
+monitor.cpp
 p_mmap.c
 p_mmap.h

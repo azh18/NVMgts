@@ -1,0 +1,8 @@
+#ifndef CONST_HPP_INCLUDED
+#define CONST_HPP_INCLUDED
+
+#define SMTYPE_NUM 9
+#define SOCKETTYPE_NUM 9
+#define SERVER_PORT 4080// port no
+
+#endif // CONST_HPP_INCLUDED

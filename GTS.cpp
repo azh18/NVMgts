@@ -111,12 +111,12 @@ int cleanData()
 
 
         *stateData = 1;
-
+//        sysInfo->datasetInNVM = -1;
+//        sysInfo->maxTid = 0;
     }
     p_clear();
     vidTotid.clear();
-    sysInfo->datasetInNVM = -1;
-    sysInfo->maxTid = 0;
+
     cout << "finishing deleting..." << endl;
     cout << "Clean Data Successfully!" << endl;
     return 0;
@@ -166,6 +166,7 @@ int main(int argc, char **argv)
     }
     else if (systemMode == 0)
     {
+        p_init(200*1024*1024);
         printf("[init] System is now at pure DRAM mode.\n");
     }
     else
@@ -238,14 +239,14 @@ int main(int argc, char **argv)
                 renewSystemState(-1,-1,-1,-1);
                 printf("Switched to pure DRAM mode.\nPlease restart NVM_GTS\n");
                 needReload_DRAM = 0;
+                datasetNowID = 0;
                 indexIsExist = 0;
             }
 
             if((shared[3]->stringData[0]=='h')||(argc == 3 && argv[1][0] == 'm' && argv[2][0] == 'h'))
             {
                 FILE *systemState = fopen("config.ini","w+");
-                if(systemMode >= 1)
-                    int ret = cleanData();
+                int ret = cleanData();
                 systemMode = 1;
                 fputc('1',systemState);
                 fclose(systemState);
@@ -254,14 +255,14 @@ int main(int argc, char **argv)
                 renewSystemState(-1,-1,-1,-1);
                 printf("Switched to SCM-DRAM mode.\nPlease restart NVM_GTS\n");
                 needReLoadData_NVM = 0;
+                datasetNowID = 0;
                 indexIsExist = 0;
             }
 
             if((shared[3]->stringData[0]=='s')||(argc == 3 && argv[1][0] == 'm' && argv[2][0] == 's'))
             {
                 FILE *systemState = fopen("config.ini","w+");
-                if(systemMode >= 1)
-                    int ret = cleanData();
+                int ret = cleanData();
                 systemMode = 2;
                 fputc('2',systemState);
                 fclose(systemState);
@@ -270,6 +271,7 @@ int main(int argc, char **argv)
                 renewSystemState(-1,-1,-1,-1);
                 printf("Switched to pure SCM mode.\nPlease restart NVM_GTS\n");
                 needReLoadData_NVM = 0;
+                datasetNowID = 0;
                 indexIsExist = 0;
             }
         }
@@ -312,6 +314,8 @@ int main(int argc, char **argv)
                 printf("Something wrong with cleanning procedure.\n");
                 sleep(2);
             }
+            if(argv[1][0]== 'c')
+                return 0;
             //return 1;
         }
         if(sem_v(semid[5]))
@@ -343,7 +347,13 @@ int main(int argc, char **argv)
             renewSystemState(-1,-1,-1,0);
             shared[0]->flag[1] = false;
         }
-        needDatasetUsedByRecovery = shared[0]->dataInt[2];
+        if((systemMode == 0)&&(datasetNowID != shared[0]->dataInt[2])){
+            needReload_DRAM = shared[0]->dataInt[2];
+        }
+        else
+        {
+            needDatasetUsedByRecovery = shared[0]->dataInt[2];
+        }
 
         if(sem_v(semid[0]))
         {
@@ -356,6 +366,7 @@ int main(int argc, char **argv)
             string filename = "SH_4_"+ to_string(needReload_DRAM) + ".txt";
             printf("Allocating DRAM...\n");
             tradbDRAM = (Trajectory*)malloc(sizeof(Trajectory)*MAX_TRAJ_SIZE);
+            vidTotid.clear();
             memset(tradbDRAM,0,sizeof(Trajectory)*MAX_TRAJ_SIZE);
             printf("Loading Data...\n");
             PreProcess pp;
@@ -367,17 +378,31 @@ int main(int argc, char **argv)
             sysInfo->ymin = pp.ymin;
             sysInfo->ymax = pp.ymax;
             sysInfo->maxTid = pp.maxTid;
-            needReload_DRAM = 0;
             datasetNowID = needReload_DRAM;
+            needReload_DRAM = 0;
             indexIsExist = 0;
         }
-        else //混合内存模式
+        else if(systemMode >= 1)//混合内存模式
         {
             if((p_get_malloc(1)==NULL)||(argc == 2 && argv[1][0]== 'r') ||(needReLoadData_NVM >= 1)) // no data or need reload
             {
-                string filename = "SH_4_"+ to_string(needReLoadData_NVM) + ".txt";
-                printf("Data not loaded, Loading Data...\n");
-                cleanData();
+                int datasetID;
+                string filename;
+                if(needReLoadData_NVM>=1)
+                {
+                    datasetID = needReLoadData_NVM;
+                    filename = "SH_4_"+ to_string(needReLoadData_NVM) + ".txt";
+                    printf("Data not loaded, Loading Data...\n");
+                    cleanData();
+                }
+                else
+                {
+                    datasetID = needDatasetUsedByRecovery;
+                    filename = "SH_4_"+ to_string(needDatasetUsedByRecovery) + ".txt";
+                    printf("Data not loaded, Loading Data...\n");
+                    vidTotid.clear();
+                }
+
 //        stateData = (int*)p_malloc(sizeof(int));
 //        p_bind(1,stateData,sizeof(int));
                 stateData = (int*)p_malloc(1,sizeof(int));
@@ -397,11 +422,11 @@ int main(int argc, char **argv)
                 sysInfo->ymin = pp.ymin;
                 sysInfo->ymax = pp.ymax;
                 sysInfo->maxTid = pp.maxTid;
-                sysInfo->datasetInNVM = needReLoadData_NVM;
+                sysInfo->datasetInNVM = datasetID;
                 (*stateData) = 3; //build data finished
                 printf("Load Data finished\n");
+                datasetNowID = datasetID;
                 needReLoadData_NVM = 0;
-                datasetNowID = needReLoadData_NVM;
                 indexIsExist = 0;
             }
             else //no reload
@@ -438,8 +463,9 @@ int main(int argc, char **argv)
                     sysInfo->datasetInNVM = needDatasetUsedByRecovery;
                     (*stateData) = 3; //build data finished
                     printf("Load Data finished\n");
-                    needReLoadData_NVM = 0;
                     datasetNowID = sysInfo->datasetInNVM;
+                    needReLoadData_NVM = 0;
+
                     indexIsExist = 0;
                 }
                 else if((*stateData)==2)
@@ -532,6 +558,20 @@ int main(int argc, char **argv)
             renewSystemState(numTrajs,numPoints,-1,-1);
             // output new system status
             cout << "Building index successful"<<endl;
+            if(sem_p(semid[6]))
+            {
+                printf("sem_p fail.\n");
+            }
+            if(shared[6]->flag[1])
+            {
+                shared[6]->dataDou[1] = getTimeus();
+                shared[6]->flag[1] = false;
+                shared[6]->flag[0] = true;
+            }
+            if(sem_v(semid[6]))
+            {
+                printf("sem_p fail.\n");
+            }
             indexIsExist = 1;
         }
         if(nowState == 0)
@@ -581,13 +621,23 @@ int main(int argc, char **argv)
                 printf("\n");
             }
         }
-
-        if(argc == 2 && argv[1][0]== 'f')
+        double batchStartTime=0,batchEndTime = 0;
+        if(sem_p(semid[1]))
+        {
+            printf("sem_p fail.\n");
+        }
+        if((argc == 2 && argv[1][0]== 'f') || (shared[1]->flag[2]))
         {
             /*
             Load Schedular... If system is down, restart after data and index are all fine
             -----------------------------------------------------------------------------------
             */
+            if(sem_v(semid[1]))
+            {
+                printf("sem_v fail.\n");
+            }
+            batchStartTime = getTimeus(); // batchStartTime should be record in Schedular
+
             if(systemMode==0)
             {
                 sche = (Schedular*)malloc(sizeof(Schedular));
@@ -597,7 +647,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                if(*stateData==3)
+                if((*stateData)==3)
                 {
                     //stateData==3 means we have not build a schedular, haven't run
                     sche = (Schedular*)p_malloc(4, sizeof(Schedular));
@@ -614,7 +664,29 @@ int main(int argc, char **argv)
                     runSchedular(sche,g,tradb);
                 }
             }
+            batchEndTime = getTimeus();
+            if(sem_p(semid[1]))
+            {
+                printf("sem_p fail.\n");
+            }
+            shared[1]->dataDou[1] = getTimeus();
+            shared[1]->flag[2]=false;
+            shared[1]->flag[1]=true; // finish one
+            shared[1]->flag[0]=true;
+            if(sem_v(semid[1]))
+            {
+                printf("sem_v fail.\n");
+            }
         }
+        else
+        {
+            if(sem_v(semid[1]))
+            {
+                printf("sem_v fail.\n");
+            }
+        }
+
+
         if(sem_p(semid[7]))
         {
             printf("sem_p fail.\n");

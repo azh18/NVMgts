@@ -11,7 +11,7 @@ PROGRAM = testGTS
 INCDIR= .
 #
 # Define the C compile flags
-CCFLAGS =  -g -m64 -I ./header -std=c++11
+CCFLAGS =  -g -O2 -m64 -I ./header -std=c++11
 CC = g++
 
 
@@ -29,7 +29,7 @@ OBJECTS = \
 	SamplePoint.o\
 	Trajectory.o\
 	BufferManager.o\
-	main.o
+	GTS.o
 
 
 
