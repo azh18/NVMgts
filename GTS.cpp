@@ -314,7 +314,7 @@ int main(int argc, char **argv)
                 printf("Something wrong with cleanning procedure.\n");
                 sleep(2);
             }
-            if(argv[1][0]== 'c')
+            if(argc == 2 && argv[1][0]== 'c')
                 return 0;
             //return 1;
         }
@@ -673,6 +673,12 @@ int main(int argc, char **argv)
             shared[1]->flag[2]=false;
             shared[1]->flag[1]=true; // finish one
             shared[1]->flag[0]=true;
+            if(nowState == 6)
+            {
+                // if in demo, finish it and mark it in int[1]
+                renewSystemState(-1,-1,-1,-1);
+                shared[1]->dataInt[1] = 1; // mark that this batch is within demo
+            }
             if(sem_v(semid[1]))
             {
                 printf("sem_v fail.\n");

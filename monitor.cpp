@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <vector>
 
 
 using namespace std;
@@ -37,7 +38,7 @@ int set_semvalue(int semid);
 int sem_p(int semid);
 int sem_v(int semid);
 int del_sem(int semid);
-int socketMsgHandler(char* msg);
+int socketMsgHandler(char* msg, int client_fd);
 double getTimeus();
 
 void* shm[SMTYPE_NUM] = {NULL};
@@ -81,7 +82,7 @@ int main()
     int client_fd;
     struct sockaddr_in ser_addr;
     struct sockaddr_in cli_addr;
-    char buffer[256 * 1024]; // buffer
+    char buffer[1024]; // buffer
     int ser_sockfd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0); // non-block mode
     if(ser_sockfd<0)
     {
@@ -132,7 +133,7 @@ int main()
 
 
     // start service.
-    char sendMsg[256*1024];
+    char sendMsg[1024];
     nowState = -1;
     //system("/home/zbw/NVMgts_Interative/NVMgts/testGTS &");
     //system("chmod 777 /home/zbw/NVMgts_Interative/NVMgts/testGTS");
@@ -161,7 +162,7 @@ int main()
                 endLoadTime = shared[0]->dataDou[1];
                 // send info about num through socket
 
-                char tempStr[1024*64];
+                char tempStr[1024];
                 // int strLen = 0+2+2;
                 memset(sendMsg,0,sizeof(sendMsg));
                 strcat(sendMsg, "0;");
@@ -172,7 +173,7 @@ int main()
                 sprintf(tempStr, "%lf:", (endLoadTime - startLoadTime)/1000000);
                 strcat(sendMsg,tempStr);
                 strcat(sendMsg, ";");
-                strcat(sendMsg, "1;");
+                strcat(sendMsg, "1;|");
                 send(client_fd, sendMsg, strlen(sendMsg) +1, 0); // send message
 
                 // after finish loading, set flag to false
@@ -209,14 +210,22 @@ int main()
                 printf("All queries are finished using %lf s.\n",runningTimeOne/1000000);
                 // send this message through socket
                 // for SENDBatch, format of msg is 1;time:;finishFlag=1;
-                char tempStr[1024*64];
+                char tempStr[1024];
                 // int strLen = 0+2+2;
                 memset(sendMsg,0,sizeof(sendMsg));
                 strcat(sendMsg, "1;");
-                sprintf(tempStr, "%lf:", runningTimeBatch/1000000);
+                if(shared[1]->dataInt[1]==1)
+                {
+                    sprintf(tempStr, "%lf:-1:", runningTimeBatch/1000000); // if in demo, the time not represent the efficiency
+                    shared[1]->dataInt[1] = 0;
+                }
+                else
+                {
+                    sprintf(tempStr, "%lf:", runningTimeBatch/1000000);
+                }
                 strcat(sendMsg,tempStr);
                 strcat(sendMsg, ";");
-                strcat(sendMsg, "1;");
+                strcat(sendMsg, "1;|");
                 send(client_fd, sendMsg, strlen(sendMsg) +1, 0); // send message
                 //........
                 shared[1]->flag[0] = false;
@@ -251,7 +260,7 @@ int main()
             strcat(sendMsg, "2;");
             strcat(sendMsg, result);
             strcat(sendMsg, ";");
-            strcat(sendMsg, "1;");
+            strcat(sendMsg, "1;|");
             send(client_fd, sendMsg, strlen(sendMsg), 0);
             shared[2]->flag[0] = false;
             shared[2]->flag[1] = false;
@@ -280,7 +289,7 @@ int main()
             memset(sendMsg,0,sizeof(sendMsg));
             strcat(sendMsg, "3;");
             strcat(sendMsg, msg);
-            strcat(sendMsg, "1;");
+            strcat(sendMsg, "1;|");
             send(client_fd, sendMsg, strlen(sendMsg), 0);
             shared[3]->flag[0] = false;
             shared[3]->flag[1] = false;
@@ -308,7 +317,7 @@ int main()
             strcat(sendMsg,"4;");
             sprintf(tempStr, "%d:%d:%c:%d:%d:;",numTrajs,numPoints,modeNow, queryIdNow,nowState);
             strcat(sendMsg, tempStr);
-            strcat(sendMsg, "1;");
+            strcat(sendMsg, "1;|");
             send(client_fd, sendMsg, strlen(sendMsg), 0);
             printf("state changed:");
             printf("%s\n",sendMsg);
@@ -330,7 +339,7 @@ int main()
         if(shared[5]->flag[0]) // clean finished
         {
             memset(sendMsg,0,sizeof(sendMsg));
-            strcpy(sendMsg, "5;1:;1;"); // clean finish
+            strcpy(sendMsg, "5;1:;1;|"); // clean finish
             send(client_fd, sendMsg, strlen(sendMsg), 0);
             shared[5]->flag[0] = false;
             shared[5]->flag[1] = false;
@@ -351,7 +360,8 @@ int main()
             double startTime = shared[6]->dataDou[0];
             double endTime = shared[6]->dataDou[1];
             memset(sendMsg,0,sizeof(sendMsg));
-            sprintf(sendMsg, "6;%lf:;1;",(endTime - startTime)/1000000);
+            sprintf(sendMsg, "6;%lf:3:;1;|",(endTime - startTime)/1000000 - 2); //-2 is because sleep(2) in demo
+            printf("%s\n",sendMsg);
             send(client_fd, sendMsg, strlen(sendMsg), 0);
             shared[6]->flag[0] = false;
             shared[6]->flag[1] = false;
@@ -372,52 +382,70 @@ int main()
                 printf("recv error: %d.\n",errno);
             }
         }
+
+
+
         if(lenRecv > 0)
         {
-            char* msg = new char[2*1024*1024];
+            // split packets use "|"
+            char* msg = new char[1024];
             memcpy(msg,buffer, sizeof(buffer));
-            printf("[DEBUG]");
-            printf("%s\n",msg);
-            int msgType = socketMsgHandler(msg);
-            // ....
-            if(msgType == 13) // close app
+            printf("[RECV]%s\n",msg);
+            char* temp;
+            vector<char*> splitMsg;
+            temp = strtok(msg,"|");
+            while (temp != NULL) {
+                splitMsg.push_back(temp);
+                temp = strtok(NULL,"|");
+            }
+
+            for(int i=0;i<=splitMsg.size()-1;i++)
             {
-                memset(sendMsg, 0, sizeof(sendMsg));
-                strcpy(sendMsg, "13;;1;");
-                send(client_fd, sendMsg, strlen(sendMsg), 0);
-                // kill process of NVMGTS
-                if(sem_p(semid[7]))
+                printf("[DEBUG]");
+                printf("%s\n",splitMsg[i]);
+                int msgType = socketMsgHandler(splitMsg[i],client_fd);
+                // ....
+                if(msgType == 13) // close app
                 {
-                    printf("sem_p fail.\n");
-                }
-                shared[7]->flag[1] = true;
-                shared[7]->flag[0] = false;
-                if(sem_v(semid[7]))
-                {
-                    printf("sem_v fail.\n");
-                }
-                // waiting for close
-                while(1)
-                {
+                    memset(sendMsg, 0, sizeof(sendMsg));
+                    strcpy(sendMsg, "13;;1;|");
+                    send(client_fd, sendMsg, strlen(sendMsg), 0);
+                    // kill process of NVMGTS
                     if(sem_p(semid[7]))
                     {
                         printf("sem_p fail.\n");
                     }
-                    if(shared[7]->flag[0])
-                    {
-                        closeMe = 1;
-                        break;
-                    }
-                    else
-                    {
-                        sleep(3);
-                    }
+                    shared[7]->flag[1] = true;
+                    shared[7]->flag[0] = false;
                     if(sem_v(semid[7]))
                     {
                         printf("sem_v fail.\n");
                     }
+                    // waiting for close
+                    while(1)
+                    {
+                        if(sem_p(semid[7]))
+                        {
+                            printf("sem_p fail.\n");
+                        }
+                        if(shared[7]->flag[0])
+                        {
+                            closeMe = 1;
+                            break;
+                        }
+                        else
+                        {
+                            sleep(3);
+                        }
+                        if(sem_v(semid[7]))
+                        {
+                            printf("sem_v fail.\n");
+                        }
+                    }
                 }
             }
+            delete msg;
+
         }
     }
 
@@ -450,7 +478,7 @@ int main()
 handle all socket msg
 return msg text in char* msg, and return the type for int
 */
-int socketMsgHandler(char* msg)
+int socketMsgHandler(char* msg, int client_fd)
 {
 
     // for LOAD, format of msg is 0;fileName;finishFlag;
@@ -585,6 +613,7 @@ int socketMsgHandler(char* msg)
         }
         if((shared[6]->flag[1]==0)) // not in demo
         {
+            char sendMsg[1024]; // send buffer
             shared[6]->flag[1] = true;
             shared[6]->flag[0] = false;
             nowState = 6;
@@ -614,6 +643,10 @@ int socketMsgHandler(char* msg)
             //how to kill?
             p1 = popen("pkill -9 test", "r");
             //pclose(p1);
+            // send break info
+            memset(sendMsg, 0, sizeof(sendMsg));
+            strcpy(sendMsg, "6;-1:1;1;|");
+            send(client_fd, sendMsg, strlen(sendMsg), 0);
             if(sem_p(semid[6]))
             {
                 printf("sem_p fail.\n");
@@ -630,6 +663,10 @@ int socketMsgHandler(char* msg)
             // system("chmod 777 /home/zbw/NVMgts_Interative/NVMgts/testGTS");
             printf("start run..");
             sleep(2);
+            // send break info
+            memset(sendMsg, 0, sizeof(sendMsg));
+            strcpy(sendMsg, "6;-1:2;1;|");
+            send(client_fd, sendMsg, strlen(sendMsg), 0);
             p1 = popen("/home/zbw/NVMgts_Interative/NVMgts/testGTS > run.log","r");
             //p1 = popen("/home/zbw/NVMgts_Interative/NVMgts/testGTS","r");
             // pid_t c = system("/home/zbw/NVMgts_Interative/NVMgts/testGTS");

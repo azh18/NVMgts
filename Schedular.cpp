@@ -181,6 +181,12 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 //			else
 //				return 0;
 		}
+        else
+        {
+            // 说明是被打断后继续的
+            //nowState = 6;
+            renewSystemState(-1,-1,-1,6);
+        }
 		if((pJob->commited == false) && (pJob->completed == true))
 		{
 			executeQueryInSchedular(sche);
@@ -297,7 +303,7 @@ int writeResult(Schedular *sche)
 	int resultNum = pJob->resultNum;
 	CPURangeQueryResult* pStart = pJob->resultData;
 	CPURangeQueryResult *pLast=NULL;
-	FILE *fp = fopen("RangeQueryResult.txt","a+");
+    FILE *fp = fopen("RangeQueryResult.txt","w+");
 	fprintf(fp,"Query ID:%d\nResult Num:%d\n",pJob->jobID,pJob->resultNum);
 	for(int i=0; i<=resultNum-1; i++)
 	{
