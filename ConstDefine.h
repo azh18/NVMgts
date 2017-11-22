@@ -10,6 +10,13 @@
 
 #include <stdio.h>
 #include <string>
+#include <sys/shm.h> // symphony header
+#include <sys/socket.h> //socket header
+#include <sys/sem.h>
+#include <sys/types.h>
+#define SMTYPE_NUM 9
+#define SOCKETTYPE_NUM 9
+#define SERVER_PORT 4081 // port no
 #include <sys/time.h>
 extern "C"{
 #include "p_mmap.h"
@@ -17,8 +24,8 @@ extern "C"{
 
 //test:以cell为基础存储
 #define _CELL_BASED_STORAGE
-#define NVM_R(x) for(volatile int accnt=0;accnt<=5;accnt++){x;} //模拟NVM read latency
-#define NVM_W(x) for(int accnt=0;accnt<=2;accnt++){x;} //模拟NVM write latency
+#define NVM_R(x) for(volatile int accnt=0;accnt<=17;accnt++){x;} //模拟NVM read latency 20太大，有时候甚至混合模式比DRAM还快
+#define NVM_W(x) for(int accnt=0;accnt<=50;accnt++){x;} //模拟NVM write latency
 //test:Similarity query based on naive grid，以定大小的grid来索引
 //#define _SIMILARITY
 
@@ -35,5 +42,20 @@ typedef struct SPoint {
 	uint32_t tID;
 }SPoint;
 
+typedef struct SMDATA
+{
+    double dataDou[4];
+    int type;
+    char stringData[10000];
+    bool flag[3];
+    int dataInt[4];
+} SMDATA;
+
+union semun
+{
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;
+};
 
 

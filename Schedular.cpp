@@ -4,6 +4,16 @@
 
 extern int systemMode;
 
+
+extern void* shm[SMTYPE_NUM];
+extern SMDATA *shared[SMTYPE_NUM];
+extern int shmid[SMTYPE_NUM];
+extern int semid[SMTYPE_NUM];
+extern int nowState;// 0-7 is real state; -1 is not do anything..
+extern int sem_p(int semid);
+extern int sem_v(int semid);
+extern int renewSystemState(int trajN, int pointN, int queryIDRunning, int runningType);
+extern double getTimeus();
 //Queue:
 int initMyQueue(myQueue *q, int nCount)
 {
@@ -23,7 +33,7 @@ bool isEmpty(myQueue *q)
 }
 bool isFull(myQueue *q)//这里是难点
 {
-	return (q->m_nTail+1)%q->m_nCount == q->m_nHead; //尾巴 加1 对总长度取 余数 如果与 头部 相等，则队列满，队列要预留出一个空间来判断是否满队列
+    return (q->m_nTail+1)%q->m_nCount == (q->m_nHead)%q->m_nCount; //尾巴 加1 对总长度取 余数 如果与 头部 相等，则队列满，队列要预留出一个空间来判断是否满队列
 }
 
 void push(myQueue *q,const TYPE& t)
@@ -45,7 +55,7 @@ bool pop(myQueue *q)
 	}
 	q->m_nHead++;
 	// t = m_pData[];
-	q->m_nTail %= q->m_nCount;
+    q->m_nHead %= q->m_nCount;
 	return true;
 
 }
@@ -79,9 +89,19 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 {
 	sche->gridIndex = gridIndex;
 	sche->DB = DB;
+    printf("test 1\n");
 	if(sche->lastCompletedJob == -1)// have not been inited
 	{
 		//have not been inited, build queue in nvm
+        if(sem_p(semid[1]))
+        {
+            printf("sem_p fail.\n");
+        }
+        shared[1]->dataDou[0] = getTimeus();
+        if(sem_v(semid[1]))
+        {
+            printf("sem_v fail.\n");
+        }
 		initSchedular(sche, gridIndex, DB);
 		std::ifstream in("queryList.txt",std::ios::in);
 		char queryStr[1024];
@@ -111,19 +131,30 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 	{
 		//schedular has been initialed, recover from nvm
 		//remember to add the base addr
-		char *baseAddr = (char*)p_get_base();
+		// char *baseAddr = (char*)p_get_base();
 		sche->jobsBuffQueue = (myQueue*)p_get_malloc(5);
 		sche->jobsBuffQueue->m_pData = (TYPE*)p_get_malloc(6);
 		sche->fp = fopen("Performance.txt","a+");
+        printf("number of jobs in queue:%d\n",sche->jobsBuffQueue->m_nTail-sche->jobsBuffQueue->m_nHead);
 		Job *pJob = front(sche->jobsBuffQueue);
 		if(pJob==NULL)
 		{
-			cout << "all jobs have been handled, if you want to reload, enter R and then press enter." << endl;
-			string press;
-			cin >> press;
-			if(press == "R")
-			{
+            printf("test 2\n");
+//			cout << "all jobs have been handled, if you want to reload, enter R and then press enter." << endl;
+//			string press;
+//			cin >> press;
+//			if(press == "R")
+//			{
 				std::ifstream in("queryList.txt",std::ios::in);
+                if(sem_p(semid[1]))
+                {
+                    printf("sem_p fail.\n");
+                }
+                shared[1]->dataDou[0] = getTimeus();
+                if(sem_v(semid[1]))
+                {
+                    printf("sem_v fail.\n");
+                }
 				char queryStr[1024];
 				while(!in.eof())
 				{
@@ -146,10 +177,16 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 				in.close();
 				sche->lastCompletedJob = 0;
 				pJob = front(sche->jobsBuffQueue);
-			}
-			else
-				return 0;
+//			}
+//			else
+//				return 0;
 		}
+        else
+        {
+            // 说明是被打断后继续的
+            //nowState = 6;
+            renewSystemState(-1,-1,-1,6);
+        }
 		if((pJob->commited == false) && (pJob->completed == true))
 		{
 			executeQueryInSchedular(sche);
@@ -181,9 +218,11 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 			pop(sche->jobsBuffQueue);
 		}
 	}
+
 	while(!isEmpty(sche->jobsBuffQueue))
 	{
 		//execute the query
+        printf("head: %d.tail: %d\n",sche->jobsBuffQueue->m_nHead,sche->jobsBuffQueue->m_nTail);
 		Job *pJob = front(sche->jobsBuffQueue);
 		executeQueryInSchedular(sche);
 		pJob->completed = true;
@@ -197,6 +236,7 @@ int runSchedular(Schedular *sche, Grid *gridIndex, Trajectory *DB)
 		pop(sche->jobsBuffQueue);
 	}
 	fclose(sche->fp);
+	return 0;
 }
 
 //int Schedular::run(Grid *gridIndex, Trajectory *DB)
@@ -263,7 +303,7 @@ int writeResult(Schedular *sche)
 	int resultNum = pJob->resultNum;
 	CPURangeQueryResult* pStart = pJob->resultData;
 	CPURangeQueryResult *pLast=NULL;
-	FILE *fp = fopen("RangeQueryResult.txt","a+");
+    FILE *fp = fopen("RangeQueryResult.txt","a+");
 	fprintf(fp,"Query ID:%d\nResult Num:%d\n",pJob->jobID,pJob->resultNum);
 	for(int i=0; i<=resultNum-1; i++)
 	{
@@ -287,11 +327,12 @@ int writeResult(Schedular *sche)
 //
 bool destroySchedular(Schedular *sche)
 {
-	myQueue* tempQueue = sche->jobsBuffQueue;
+	//myQueue* tempQueue = sche->jobsBuffQueue;
 	p_free(6);
 	p_free(5);
 	p_free(4);
 	(*stateData) = 3;
+	return true;
 }
 
 //
