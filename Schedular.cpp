@@ -303,7 +303,7 @@ int writeResult(Schedular *sche)
 	int resultNum = pJob->resultNum;
 	CPURangeQueryResult* pStart = pJob->resultData;
 	CPURangeQueryResult *pLast=NULL;
-    FILE *fp = fopen("RangeQueryResult.txt","w+");
+    FILE *fp = fopen("RangeQueryResult.txt","a+");
 	fprintf(fp,"Query ID:%d\nResult Num:%d\n",pJob->jobID,pJob->resultNum);
 	for(int i=0; i<=resultNum-1; i++)
 	{
