@@ -109,6 +109,7 @@ int main()
     int closeMe = 0;
     int numTrajs = 0,numPoints = 0;
     printf("tes>>>>%d\n",EWOULDBLOCK);
+    p1 = popen("/home/zbw/NVMgts_Interative/NVMgts/testGTS > run.log","r");
     while(true)
     {
         client_fd = accept4(ser_sockfd, (struct sockaddr*)&cli_addr, &addrlen,SOCK_NONBLOCK);
