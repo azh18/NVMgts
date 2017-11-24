@@ -51,7 +51,10 @@ FILE *p1;
 int main()
 {
     cout << "Hello world!" << endl;
-
+    FILE* pTemp;
+    pTemp = fopen("RangeQueryResult.txt","w+");
+    fprintf(pTemp, "runrunrun\n");
+    fclose(pTemp); // to clean up the RangeQueryResult.txt
     //-------------------------------------------------
     // initial shm and semaphore
     for(int i=0; i<SMTYPE_NUM; i++)
@@ -255,14 +258,29 @@ int main()
             printf("This query is finished using %lf s.\n", runningTime/1000000);
             // send this msg through socket
             //......
-            char result[10000];
-            strcpy(result, shared[2]->stringData);
+            //char result[2*1024*1024];
+            char result[1000];
+            // size_t fileLength = shared[2]->dataInt[1];
+            sprintf(result, "Result Number: %d, some results are displayed:\n", shared[2]->dataInt[1]);
+            strcat(result, shared[2]->stringData);
+            if(sem_v(semid[2]))
+            {
+                printf("sem_v fail.\n");
+            }
+            //FILE *resultFile = fopen(fileName, "r+");
+            //int readBytes = fread(result, sizeof(char), fileLength, resultFile);
+            //fclose(resultFile);
+
             memset(sendMsg, 0, sizeof(sendMsg));
             strcat(sendMsg, "2;");
             strcat(sendMsg, result);
             strcat(sendMsg, ";");
             strcat(sendMsg, "1;|");
             send(client_fd, sendMsg, strlen(sendMsg), 0);
+            if(sem_p(semid[2]))
+            {
+                printf("sem_p fail.\n");
+            }
             shared[2]->flag[0] = false;
             shared[2]->flag[1] = false;
         }

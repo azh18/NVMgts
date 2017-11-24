@@ -10,6 +10,7 @@
 #include <vector>
 #include "Grid.h"
 #include "Schedular.h"
+#include <sstream>
 
 extern "C" {
 #include "p_mmap.h"
@@ -594,19 +595,35 @@ int main(int argc, char **argv)
             }
             renewSystemState(numTrajs,numPoints,-1,-1);
         }
-
-
-        if(argc == 2 && argv[1][0]== 's')
+        /*
+        Single Query...
+        -----------------------------------------------------------------------------------
+        */
+        if(sem_p(semid[2]))
+        {
+            printf("sem_p fail.\n");
+        }
+        if(argc == 2 && argv[1][0]== 's' || shared[2]->flag[1])
         {
             //单独用户输入query测试
             CPURangeQueryResult* resultTable=(CPURangeQueryResult*)malloc(sizeof(CPURangeQueryResult));
             int RangeQueryResultSize = 0;
-
-            MBB SHMbb = MBB(121.36, 31.10, 121.56, 31.36);
+            double x1,x2,y1,y2;
+            x1 = shared[2]->dataDou[0];
+            x2 = shared[2]->dataDou[1];
+            y1 = shared[2]->dataDou[2];
+            y2 = shared[2]->dataDou[3];
+            if(sem_v(semid[2]))
+            {
+                printf("sem_v fail.\n");
+            }
+            MBB SHMbb = MBB(x1, y1, x2, y2);
             MBB *queryMBB = new MBB[1000];
-            SHMbb.randomGenerateInnerMBB(queryMBB,1000);
+            queryMBB[0] = SHMbb;
+            /*
+            // SHMbb.randomGenerateInnerMBB(queryMBB,1000);
             int qcnt=0;
-            for (int i=0; i<=1; i++)
+            for (int i=0; i<1; i++)
             {
                 printf("RQ(%f,%f,%f,%f)\n",queryMBB[i].xmin,queryMBB[i].xmax,queryMBB[i].ymin,queryMBB[i].ymax);
                 rangeQuery(g,queryMBB[i],resultTable,&RangeQueryResultSize);
@@ -620,7 +637,53 @@ int main(int argc, char **argv)
                 }
                 printf("\n");
             }
+            */
+            rangeQuery(g, queryMBB[0], resultTable, &RangeQueryResultSize);
+            CPURangeQueryResult* first = resultTable->next;
+            string printString;
+            int haveWrittenBytes = 0;
+            FILE *singleResultFile = fopen("singleResult.txt", "w+");
+            char temp[1000] = {0};
+            for(int tt=0; tt<=RangeQueryResultSize-1; tt++)
+            {
+                //stringstream printString;
+                char buff[200]={0};
+                if(haveWrittenBytes < 600){
+                    haveWrittenBytes += sprintf(buff, "TraID:%d longnitude:%f latitude:%f\n",
+                                           first->traid, first->x, first->y);
+                    strcat(temp, buff);
+                }
+                fprintf(singleResultFile, "TraID:%d longnitude:%f latitude:%f\n",
+                        first->traid, first->x, first->y);
+
+//                printString << "TraID:" << first->traid << " longnitude:" << first->x <<
+//                        " latitude:" << first->y << "\n";
+                //printf("TraID:%d longnitude:%f latitude:%f\n",first->traid, first->x, first->y);
+                first = first->next;
+                if(first == NULL)
+                    break;
+            }
+            fclose(singleResultFile);
+
+            if(sem_p(semid[2]))
+            {
+                printf("sem_p fail.\n");
+            }
+            strcpy(shared[2]->stringData, temp);
+            shared[2]->dataInt[1] = RangeQueryResultSize;
+            shared[2]->flag[0] = true;
+            shared[2]->flag[1] = false;
         }
+        if(sem_v(semid[2]))
+        {
+            printf("sem_v fail.\n");
+        }
+
+        /*
+        Batch Query...
+        -----------------------------------------------------------------------------------
+        */
+
         double batchStartTime=0,batchEndTime = 0;
         if(sem_p(semid[1]))
         {
